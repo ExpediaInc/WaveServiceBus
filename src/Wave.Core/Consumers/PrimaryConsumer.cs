@@ -92,7 +92,7 @@ namespace Wave.Consumers
             }
 
             // Invoke handler and get handler result
-            var handlerResult = this.PerformHandler(messageType, messageEnvelope, message);
+            var handlerResult = this.PerformHandler(messageType, messageEnvelope, message.RetryCount);
 
             // Run OnHandlerExecuted on filters and return final result
             return this.PerformFilters(messageType, messageEnvelope, handlerResult, filter => filter.OnHandlerExecuted(handlerResult, messageType, message));
@@ -148,9 +148,9 @@ namespace Wave.Consumers
         /// </summary>
         /// <param name="messageType"></param>
         /// <param name="messageEnvelope"></param>
-        /// <param name="message"></param>
+        /// <param name="currentRetryCount"></param>
         /// <returns></returns>
-        private IHandlerResult PerformHandler(Type messageType, object messageEnvelope, RawMessage message)
+        private IHandlerResult PerformHandler(Type messageType, object messageEnvelope, int currentRetryCount)
         {
             try
             {
@@ -159,7 +159,7 @@ namespace Wave.Consumers
             catch (TargetInvocationException ex)
             {
                 const string LogMessageFormat = "Unhandled exception in handler: {0}";
-                if (RetryResult.ShouldRetry(message))
+                if (RetryResult.WillRetry(currentRetryCount))
                 {
                     // log a warning for retriable messages, since the error may just be transient
                     this.configuration.Logger.WarnFormat(LogMessageFormat, ex.InnerException.ToString());

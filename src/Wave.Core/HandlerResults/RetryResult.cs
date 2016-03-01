@@ -27,14 +27,14 @@ namespace Wave.HandlerResults
 
         public string Message { get; private set; }
 
-        public static bool ShouldRetry(RawMessage message)
+        public static bool WillRetry(int currentRetryCount)
         {
-            return message.RetryCount < ConfigurationContext.Current.MessageRetryLimit;
+            return currentRetryCount < ConfigurationContext.Current.MessageRetryLimit;
         }
 
         public void ProcessResult(RawMessage message, ITransport transport, ILogger log)
         {
-            if (ShouldRetry(message))
+            if (WillRetry(message.RetryCount))
             {
                 message.RetryCount++;
                 log.InfoFormat("Message requested to be retried {0} - Retry Count {1}", message.ToString(), message.RetryCount);
