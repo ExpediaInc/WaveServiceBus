@@ -54,7 +54,8 @@ namespace Wave.Transports.RabbitMQ
             this.errorQueueName = String.Format("{0}_Error", this.primaryQueueName);
 
             this.DeclareExchange();
-            this.InitializeSendChannels();
+
+            this.sendChannel = new ThreadLocal<IModel>(() => this.connectionManager.GetChannel(), true);
         }
 
         public void GetDelayMessages(CancellationToken token, Action<RawMessage, Action, Action> onMessageReceived)
@@ -146,19 +147,6 @@ namespace Wave.Transports.RabbitMQ
 
         public void Shutdown()
         {
-            this.DisposeSendChannels();
-
-            // Force the RabbitMQ connection to shutdown.
-            this.connectionManager.Shutdown();
-        }
-
-        private void DisposeSendChannels()
-        {
-            if (this.sendChannel == null)
-            {
-                return;
-            }
-
             // Dispose all of the channels 
             foreach (var channel in this.sendChannel.Values)
             {
@@ -167,12 +155,9 @@ namespace Wave.Transports.RabbitMQ
 
             // Dispose the thread local wrapper
             this.sendChannel.Dispose();
-        }
 
-        private void Reset()
-        {
-            this.DisposeSendChannels();
-            this.InitializeSendChannels();
+            // Force the RabbitMQ connection to shutdown.
+            this.connectionManager.Shutdown();
         }
 
         private void DeclareExchange()
@@ -182,11 +167,6 @@ namespace Wave.Transports.RabbitMQ
                 // Create exchange if it doesn't already exist
                 channel.ExchangeDeclare(this.configuration.GetExchange(), "direct", true);
             }
-        }
-
-        private void InitializeSendChannels()
-        {
-            this.sendChannel = new ThreadLocal<IModel>(() => this.connectionManager.GetChannel(), true);
         }
 
         private IBasicProperties CreateProperties(RawMessage message, IModel channel)
@@ -209,19 +189,6 @@ namespace Wave.Transports.RabbitMQ
         }
 
         private void GetMessages(string queueName, bool ackMultiple, CancellationToken token, Action<RawMessage, Action, Action> onMessageReceived)
-        {
-            try
-            {
-                GetMessagesCore(queueName, ackMultiple, token, onMessageReceived);
-            }
-            catch (Exception)
-            {
-                this.Reset();
-                throw;
-            }
-        }
-
-        private void GetMessagesCore(string queueName, bool ackMultiple, CancellationToken token, Action<RawMessage, Action, Action> onMessageReceived)
         {
             using (var channel = this.connectionManager.GetChannel())
             {
