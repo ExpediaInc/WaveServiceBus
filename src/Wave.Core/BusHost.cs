@@ -24,7 +24,7 @@ namespace Wave
 {    
     public class BusHost : IBusHost
     {
-        private const int AutoRecoveryDelayMillis = 7500;
+        private const int AutoRecoveryDelayMillis = 5000;
 
         private bool consumersFaulted;
 
