@@ -20,22 +20,21 @@ namespace Wave.Transports.RabbitMQ
 {
     internal class RabbitConnectionManager
     {
-        private readonly ConnectionFactory connectionFactory;        
+        private readonly Uri connectionString;
+
+        private ConnectionFactory connectionFactory;
+
         private Lazy<IConnection> connection;
 
         internal RabbitConnectionManager(Uri connectionString)
-        {            
-            this.connectionFactory = new ConnectionFactory { Uri = connectionString.AbsoluteUri, RequestedHeartbeat = 30 };
-            this.ResetConnection();
-        }
-
-        internal void ResetConnection()
         {
-            this.connection = new Lazy<IConnection>(this.CreateConnection);
+            this.connectionString = connectionString;
+            this.ResetConnection();
         }
 
         internal IModel GetChannel()
         {
+            this.EnsureConnectionIsOpen();
             return this.connection.Value.CreateModel();
         }
 
@@ -45,12 +44,39 @@ namespace Wave.Transports.RabbitMQ
             this.connection.Value.Close();
         }
 
+        private void EnsureConnectionIsOpen()
+        {
+            if (!this.connection.Value.IsOpen)
+            {
+                this.ResetConnection();
+            }
+        }
+
         private IConnection CreateConnection()
         {
-            var conn = this.connectionFactory.CreateConnection();
-            conn.ConnectionShutdown += OnConnectionShutDown;
+            try
+            {
+                var conn = this.connectionFactory.CreateConnection();
+                conn.ConnectionShutdown += OnConnectionShutDown;
 
-            return conn;
+                return conn;
+            }
+            catch (Exception)
+            {
+                this.ResetConnection();
+                throw;
+            }
+        }
+
+        private void ResetConnection()
+        {
+            this.connectionFactory = new ConnectionFactory { Uri = this.connectionString.AbsoluteUri, RequestedHeartbeat = 30 };
+            if (this.connection != null && this.connection.IsValueCreated)
+            {
+                this.connection.Value.ConnectionShutdown -= OnConnectionShutDown;
+            }
+
+            this.connection = new Lazy<IConnection>(this.CreateConnection);
         }
 
         private void OnConnectionShutDown(object sender, ShutdownEventArgs reason)

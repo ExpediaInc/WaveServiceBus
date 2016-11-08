@@ -74,8 +74,9 @@ namespace Wave
                 {
                     this.StartCore();
                 }
-                catch (Exception)
+                catch (Exception ex)
                 {
+                    this.configuration.Logger.ErrorFormat("Exception starting bus host: {0}", ex.ToString());
                     Task.Delay(AutoRecoveryDelayMillis, cancelToken).Wait(cancelToken);                    
                 }
             }
