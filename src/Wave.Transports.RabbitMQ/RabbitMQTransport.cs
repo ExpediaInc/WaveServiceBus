@@ -23,16 +23,9 @@ using Wave.Transports.RabbitMQ.Extensions;
 using Wave.Utility;
 
 namespace Wave.Transports.RabbitMQ
-{
-    using System.IO;
-    using System.Threading.Tasks;
-
-    using global::RabbitMQ.Client.Exceptions;
-    using global::RabbitMQ.Client.Framing.Impl;
-
+{    
     public class RabbitMQTransport : ITransport
     {
-        private const int AutoRecoveryDelayMillis = 7500;
         private readonly RabbitConnectionManager connectionManager;        
         private readonly String delayQueueName;
         private readonly String errorQueueName;
@@ -41,7 +34,7 @@ namespace Wave.Transports.RabbitMQ
 
         private readonly Lazy<string> encodingName;
 
-        private readonly ThreadLocal<IModel> sendChannel;
+        private ThreadLocal<IModel> sendChannel;
  
         public RabbitMQTransport(IConfigurationContext configuration)
             : this(configuration.QueueNameResolver.GetPrimaryQueueName(), configuration)
@@ -66,7 +59,7 @@ namespace Wave.Transports.RabbitMQ
                 channel.ExchangeDeclare(this.configuration.GetExchange(), "direct", true);
             }
 
-            this.sendChannel = new ThreadLocal<IModel>(() => this.connectionManager.GetChannel(autorecovering: false), true);
+            this.InitializeSendChannels();
         }
 
         public void GetDelayMessages(CancellationToken token, Action<RawMessage, Action, Action> onMessageReceived)
@@ -76,13 +69,13 @@ namespace Wave.Transports.RabbitMQ
             //        If AckMultiple=true and a message with a later delivery tag is acked, then the channel throws an error
             //        when trying to ack a message with a previous delivery tag since it's considered a duplicate ack.
             const bool AckMultiple = false;
-            this.GetMessagesWithRecovery(this.delayQueueName, AckMultiple, token, onMessageReceived);
+            this.GetMessages(this.delayQueueName, AckMultiple, token, onMessageReceived);
         }
 
         public void GetMessages(CancellationToken token, Action<RawMessage, Action, Action> onMessageReceived)
         {
             const bool AckMultiple = true;
-            this.GetMessagesWithRecovery(this.primaryQueueName, AckMultiple, token, onMessageReceived);
+            this.GetMessages(this.primaryQueueName, AckMultiple, token, onMessageReceived);
         }
 
         public void InitializeForConsuming()
@@ -128,9 +121,8 @@ namespace Wave.Transports.RabbitMQ
         {
             if (this.sendChannel.Value.IsClosed)
             {
-                Console.WriteLine("Send Channel Is Closed - re-creating");
                 this.sendChannel.Value.Dispose();
-                this.sendChannel.Value = this.connectionManager.GetChannel(autorecovering: false);
+                this.sendChannel.Value = this.connectionManager.GetChannel();
             }
 
             this.sendChannel.Value.BasicPublish(
@@ -157,17 +149,38 @@ namespace Wave.Transports.RabbitMQ
 
         public void Shutdown()
         {
+            this.DisposeSendChannels();
+
+            // Force the RabbitMQ connection to shutdown.
+            this.connectionManager.Shutdown();
+        }
+
+        private void DisposeSendChannels()
+        {
+            if (this.sendChannel == null)
+            {
+                return;
+            }
+
             // Dispose all of the channels 
             foreach (var channel in this.sendChannel.Values)
             {
                 channel.Dispose();
             }
-            
+
             // Dispose the thread local wrapper
             this.sendChannel.Dispose();
+        }
 
-            // Force the RabbitMQ connection to shutdown.
-            this.connectionManager.Shutdown();
+        private void Reset()
+        {
+            this.DisposeSendChannels();
+            this.InitializeSendChannels();
+        }
+
+        private void InitializeSendChannels()
+        {
+            this.sendChannel = new ThreadLocal<IModel>(() => this.connectionManager.GetChannel(), true);
         }
 
         private IBasicProperties CreateProperties(RawMessage message, IModel channel)
@@ -189,40 +202,22 @@ namespace Wave.Transports.RabbitMQ
             return properties;
         }
 
-        private void GetMessagesWithRecovery(
-            string queueName,
-            bool ackMultiple,
-            CancellationToken token,
-            Action<RawMessage, Action, Action> onMessageReceived)
+        private void GetMessages(string queueName, bool ackMultiple, CancellationToken token, Action<RawMessage, Action, Action> onMessageReceived)
         {
-            while (true)
+            try
             {
-                try
-                {
-                    GetMessages(queueName, ackMultiple, token, onMessageReceived);
-                }
-                catch (AlreadyClosedException)
-                {
-                    Task.Delay(AutoRecoveryDelayMillis, token).Wait(token);
-                }
-                catch (BrokerUnreachableException)
-                {
-                    Task.Delay(AutoRecoveryDelayMillis, token).Wait(token);
-                }
-                catch (EndOfStreamException)
-                {
-                    Task.Delay(AutoRecoveryDelayMillis, token).Wait(token);
-                }
-                catch (Exception)
-                {
-                    Task.Delay(AutoRecoveryDelayMillis, token).Wait(token);
-                }
+                GetMessagesCore(queueName, ackMultiple, token, onMessageReceived);
+            }
+            catch (Exception)
+            {
+                this.Reset();
+                throw;
             }
         }
 
-        private void GetMessages(string queueName, bool ackMultiple, CancellationToken token, Action<RawMessage, Action, Action> onMessageReceived)
+        private void GetMessagesCore(string queueName, bool ackMultiple, CancellationToken token, Action<RawMessage, Action, Action> onMessageReceived)
         {
-            using (var channel = this.connectionManager.GetChannel(autorecovering: false))
+            using (var channel = this.connectionManager.GetChannel())
             {
                 var consumer = new QueueingBasicConsumer(channel);
                 var prefetchCount = (this.configuration.MaxWorkers * 2) >= ushort.MaxValue

@@ -24,6 +24,8 @@ namespace Wave
 {    
     public class BusHost : IBusHost
     {
+        private const int AutoRecoveryDelayMillis = 7500;
+
         private bool consumersFaulted;
 
         private IConfigurationContext configuration;
@@ -63,6 +65,26 @@ namespace Wave
 
         public virtual void Start()
         {
+            var cancelToken = this.configuration.TokenSource.Token;
+
+            // retry forever; consider capped exponential backoff with retry limit
+            while (true)
+            {
+                try
+                {
+                    this.StartCore();
+                }
+                catch (Exception)
+                {
+                    Task.Delay(AutoRecoveryDelayMillis, cancelToken).Wait(cancelToken);                    
+                }
+            }
+        }
+
+        private void StartCore()
+        {
+            this.consumersFaulted = false;
+
             var cancelToken = this.configuration.TokenSource.Token;
             var consumerTasks = new List<Task>();
 

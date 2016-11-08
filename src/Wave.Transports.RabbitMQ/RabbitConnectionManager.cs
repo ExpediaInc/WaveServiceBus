@@ -18,9 +18,6 @@ using System;
 
 namespace Wave.Transports.RabbitMQ
 {
-    using global::RabbitMQ.Client.Exceptions;
-    using global::RabbitMQ.Client.Framing.Impl;
-
     internal class RabbitConnectionManager
     {
         private readonly ConnectionFactory connectionFactory;        
@@ -29,53 +26,37 @@ namespace Wave.Transports.RabbitMQ
         internal RabbitConnectionManager(Uri connectionString)
         {            
             this.connectionFactory = new ConnectionFactory { Uri = connectionString.AbsoluteUri, RequestedHeartbeat = 30 };
-            this.connectionFactory.AutomaticRecoveryEnabled = this.connectionFactory.TopologyRecoveryEnabled = true;
-            this.connection = new Lazy<IConnection>(CreateConnection);                        
+            this.ResetConnection();
         }
 
-        internal IModel GetChannel(bool autorecovering = true)
+        internal void ResetConnection()
         {
-            var autorecoveringConnection = this.connection.Value as AutorecoveringConnection;
-            return autorecovering ? autorecoveringConnection.CreateModel() : autorecoveringConnection.CreateNonRecoveringModel();
+            this.connection = new Lazy<IConnection>(this.CreateConnection);
+        }
+
+        internal IModel GetChannel()
+        {
+            return this.connection.Value.CreateModel();
         }
 
         internal void Shutdown()
         {
-            Console.WriteLine("ShutdownConnection");
-            //this.connection.Value.ConnectionShutdown -= OnConnectionShutDown;
+            this.connection.Value.ConnectionShutdown -= OnConnectionShutDown;
             this.connection.Value.Close();
         }
 
         private IConnection CreateConnection()
         {
-            Console.WriteLine("CreateConnection");
+            var conn = this.connectionFactory.CreateConnection();
+            conn.ConnectionShutdown += OnConnectionShutDown;
 
-            IConnection conn;
-            try
-            {
-                conn = this.connectionFactory.CreateConnection();
-            }
-            catch (Exception)
-            {
-                //this.InitializeLazyConnection();
-                throw;
-            }
-
-            //conn.ConnectionShutdown += OnConnectionShutDown;
             return conn;
         }
 
-        /*private void OnConnectionShutDown(object connection, ShutdownEventArgs reason)
+        private void OnConnectionShutDown(object sender, ShutdownEventArgs reason)
         {
-            Console.WriteLine("OnConnectionShutDown - " + reason.ReplyText);
             // If the connection is aborted, reinit the lazy connection so that next access will reconnect.
-            this.InitializeLazyConnection();
+            this.ResetConnection();
         }
-
-        private void InitializeLazyConnection()
-        {
-            Console.WriteLine("InitializeLazyConnection");
-            this.connection = new Lazy<IConnection>(this.CreateConnection);
-        }*/
     }
 }
