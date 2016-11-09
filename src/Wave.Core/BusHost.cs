@@ -24,8 +24,6 @@ namespace Wave
 {    
     public class BusHost : IBusHost
     {
-        private const int AutoRecoveryDelayMillis = 5000;
-
         private bool consumersFaulted;
 
         private IConfigurationContext configuration;
@@ -76,8 +74,13 @@ namespace Wave
                 }
                 catch (Exception ex)
                 {
+                    if (!this.configuration.IsAutoRecoveryEnabled)
+                    {
+                        throw;
+                    }
+
                     this.configuration.Logger.ErrorFormat("Exception starting bus host: {0}", ex.ToString());
-                    Task.Delay(AutoRecoveryDelayMillis, cancelToken).Wait(cancelToken);                    
+                    Task.Delay(this.configuration.AutoRecoveryInterval, cancelToken).Wait(cancelToken);                    
                 }
             }
         }

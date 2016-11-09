@@ -24,6 +24,8 @@ namespace Wave.Configuration
         private IContainer container;
 
         private int maxWorkers = 1;
+        private bool isAutoRecoveryEnabled = true;
+        private TimeSpan autoRecoveryInterval = TimeSpan.FromSeconds(5);
         private Dictionary<Type, List<IInboundMessageFilter>> inboundMessageFilters = new Dictionary<Type, List<IInboundMessageFilter>>();
         private Dictionary<Type, List<IOutboundMessageFilter>> outboundMessageFilters = new Dictionary<Type, List<IOutboundMessageFilter>>();
         private int messageRetryLimit = 5;
@@ -46,6 +48,18 @@ namespace Wave.Configuration
         {
             get { return this.maxWorkers; }
             set { this.maxWorkers = value; }
+        }
+
+        internal bool IsAutoRecoveryEnabled
+        {
+            get { return this.isAutoRecoveryEnabled; }
+            set { this.isAutoRecoveryEnabled = value; }
+        }
+
+        internal TimeSpan AutoRecoveryInterval
+        {
+            get { return this.autoRecoveryInterval; }
+            set { this.autoRecoveryInterval = value; }
         }
 
         internal Dictionary<Type, List<IInboundMessageFilter>> InboundMessageFilters
@@ -91,6 +105,8 @@ namespace Wave.Configuration
                 this.Container = source.Container;
                 this.Subscriptions = source.Subscriptions;
                 this.MaxWorkers = source.MaxWorkers;
+                this.IsAutoRecoveryEnabled = source.IsAutoRecoveryEnabled;
+                this.AutoRecoveryInterval = source.AutoRecoveryInterval;
                 this.InboundMessageFilters = source.InboundMessageFilters;
                 this.OutboundMessageFilters = source.OutboundMessageFilters;
                 this.MessageRetryLimit = source.MessageRetryLimit;

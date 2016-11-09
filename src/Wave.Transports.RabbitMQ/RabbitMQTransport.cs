@@ -34,7 +34,7 @@ namespace Wave.Transports.RabbitMQ
 
         private readonly Lazy<string> encodingName;
 
-        private ThreadLocal<IModel> sendChannel;
+        private readonly ThreadLocal<IModel> sendChannel;
  
         public RabbitMQTransport(IConfigurationContext configuration)
             : this(configuration.QueueNameResolver.GetPrimaryQueueName(), configuration)
