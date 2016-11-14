@@ -64,6 +64,32 @@ namespace Wave
         public virtual void Start()
         {
             var cancelToken = this.configuration.TokenSource.Token;
+
+            // retry forever; consider capped exponential backoff with retry limit
+            while (true)
+            {
+                try
+                {
+                    this.StartCore();
+                }
+                catch (Exception ex)
+                {
+                    if (!this.configuration.IsAutoRecoveryEnabled)
+                    {
+                        throw;
+                    }
+
+                    this.configuration.Logger.ErrorFormat("Exception starting bus host: {0}", ex.ToString());
+                    Task.Delay(this.configuration.AutoRecoveryInterval, cancelToken).Wait(cancelToken);                    
+                }
+            }
+        }
+
+        private void StartCore()
+        {
+            this.consumersFaulted = false;
+
+            var cancelToken = this.configuration.TokenSource.Token;
             var consumerTasks = new List<Task>();
 
             this.configuration.Logger.Info("Starting...");

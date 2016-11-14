@@ -29,6 +29,10 @@ namespace Wave
 
         int MaxWorkers { get; set; }
 
+        bool IsAutoRecoveryEnabled { get; set; }
+
+        TimeSpan AutoRecoveryInterval { get; set; }
+
         ILookup<Type, IInboundMessageFilter> InboundMessageFilters { get; set; }
 
         ILookup<Type, IOutboundMessageFilter> OutboundMessageFilters { get; set; }

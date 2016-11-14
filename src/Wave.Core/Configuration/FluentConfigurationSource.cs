@@ -143,6 +143,40 @@ namespace Wave.Configuration
             return this;
         }
 
+        /// <summary>
+        /// Disables auto-recovery of the BusHost on exceptions.
+        /// </summary>
+        /// <returns>The configuration source.</returns>
+        public FluentConfigurationSource WithoutAutoRecovery()
+        {
+            this.IsAutoRecoveryEnabled = false;
+            return this;
+        }
+
+        /// <summary>
+        /// Enables auto-recovery of the BusHost on exceptions.
+        /// Auto-recovery is enabled by default with a 5-second retry interval.
+        /// </summary>
+        /// <returns>The configuration source.</returns>
+        public FluentConfigurationSource WithAutoRecovery()
+        {
+            this.IsAutoRecoveryEnabled = true;
+            return this;
+        }
+
+        /// <summary>
+        /// Enables auto-recovery of the BusHost on exceptions.
+        /// Auto-recovery is enabled by default with a 5-second retry interval.
+        /// </summary>
+        /// <param name="interval">The amount of time to wait between retrying bus connections.</param>
+        /// <returns>The configuration source.</returns>
+        public FluentConfigurationSource WithAutoRecovery(TimeSpan interval)
+        {
+            this.IsAutoRecoveryEnabled = true;
+            this.AutoRecoveryInterval = interval;
+            return this;
+        }
+
         public FluentConfigurationSource WithMessageRetryLimit(int retryLimit)
         {
             this.MessageRetryLimit = retryLimit;
@@ -179,6 +213,8 @@ namespace Wave.Configuration
         {
             this.Populate(previousSource);
             this.ConfigurationContext.MaxWorkers = this.MaxWorkers;
+            this.ConfigurationContext.IsAutoRecoveryEnabled = this.IsAutoRecoveryEnabled;
+            this.ConfigurationContext.AutoRecoveryInterval = this.AutoRecoveryInterval;
             this.ConfigurationContext.MessageRetryLimit = this.MessageRetryLimit;
 
             return this;

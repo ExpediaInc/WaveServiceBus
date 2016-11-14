@@ -20,17 +20,21 @@ namespace Wave.Transports.RabbitMQ
 {
     internal class RabbitConnectionManager
     {
-        private readonly ConnectionFactory connectionFactory;        
+        private readonly Uri connectionString;
+
+        private ConnectionFactory connectionFactory;
+
         private Lazy<IConnection> connection;
 
         internal RabbitConnectionManager(Uri connectionString)
-        {            
-            this.connectionFactory = new ConnectionFactory { Uri = connectionString.AbsoluteUri, RequestedHeartbeat = 30 };
-            this.connection = new Lazy<IConnection>(CreateConnection);                        
+        {
+            this.connectionString = connectionString;
+            this.ResetConnection();
         }
 
         internal IModel GetChannel()
         {
+            this.EnsureConnectionIsOpen();
             return this.connection.Value.CreateModel();
         }
 
@@ -40,18 +44,45 @@ namespace Wave.Transports.RabbitMQ
             this.connection.Value.Close();
         }
 
-        private IConnection CreateConnection()
+        private void EnsureConnectionIsOpen()
         {
-            var conn = this.connectionFactory.CreateConnection();
-            conn.ConnectionShutdown += OnConnectionShutDown;
-
-            return conn;
+            if (!this.connection.Value.IsOpen)
+            {
+                this.ResetConnection();
+            }
         }
 
-        private void OnConnectionShutDown(IConnection connection, ShutdownEventArgs reason)
+        private IConnection CreateConnection()
+        {
+            try
+            {
+                var conn = this.connectionFactory.CreateConnection();
+                conn.ConnectionShutdown += OnConnectionShutDown;
+
+                return conn;
+            }
+            catch (Exception)
+            {
+                this.ResetConnection();
+                throw;
+            }
+        }
+
+        private void ResetConnection()
+        {
+            this.connectionFactory = new ConnectionFactory { Uri = this.connectionString.AbsoluteUri, RequestedHeartbeat = 30 };
+            if (this.connection != null && this.connection.IsValueCreated)
+            {
+                this.connection.Value.ConnectionShutdown -= OnConnectionShutDown;
+            }
+
+            this.connection = new Lazy<IConnection>(this.CreateConnection);
+        }
+
+        private void OnConnectionShutDown(object sender, ShutdownEventArgs reason)
         {
             // If the connection is aborted, reinit the lazy connection so that next access will reconnect.
-            this.connection = new Lazy<IConnection>(CreateConnection);
+            this.ResetConnection();
         }
     }
 }

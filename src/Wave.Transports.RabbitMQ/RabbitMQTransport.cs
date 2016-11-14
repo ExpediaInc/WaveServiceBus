@@ -53,11 +53,7 @@ namespace Wave.Transports.RabbitMQ
             this.delayQueueName = String.Format("{0}_Delay", this.primaryQueueName);
             this.errorQueueName = String.Format("{0}_Error", this.primaryQueueName);
 
-            using (var channel = this.connectionManager.GetChannel())
-            {
-                // Create exchange if it doesn't already exist
-                channel.ExchangeDeclare(this.configuration.GetExchange(), "direct", true);
-            }
+            this.DeclareExchange();
 
             this.sendChannel = new ThreadLocal<IModel>(() => this.connectionManager.GetChannel(), true);
         }
@@ -80,6 +76,8 @@ namespace Wave.Transports.RabbitMQ
 
         public void InitializeForConsuming()
         {
+            this.DeclareExchange(); // exchange may not exist at this point in an autorecovery event
+
             using (var channel = this.connectionManager.GetChannel())
             {
                 var autoDelete = this.configuration.GetAutoDeleteQueues();
@@ -154,12 +152,21 @@ namespace Wave.Transports.RabbitMQ
             {
                 channel.Dispose();
             }
-            
+
             // Dispose the thread local wrapper
             this.sendChannel.Dispose();
 
             // Force the RabbitMQ connection to shutdown.
             this.connectionManager.Shutdown();
+        }
+
+        private void DeclareExchange()
+        {
+            using (var channel = this.connectionManager.GetChannel())
+            {
+                // Create exchange if it doesn't already exist
+                channel.ExchangeDeclare(this.configuration.GetExchange(), "direct", true);
+            }
         }
 
         private IBasicProperties CreateProperties(RawMessage message, IModel channel)

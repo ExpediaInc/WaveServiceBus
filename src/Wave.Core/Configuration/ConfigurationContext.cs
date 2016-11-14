@@ -64,6 +64,18 @@ namespace Wave.Configuration
             set { this["maxWorkers"] = value; }
         }
 
+        public bool IsAutoRecoveryEnabled
+        {
+            get { return (bool)this["isAutoRecoveryEnabled"]; }
+            set { this["isAutoRecoveryEnabled"] = value; }
+        }
+
+        public TimeSpan AutoRecoveryInterval
+        {
+            get { return (TimeSpan)this["autoRecoveryInterval"]; }
+            set { this["autoRecoveryInterval"] = value; }
+        }
+
         public ILookup<Type, IInboundMessageFilter> InboundMessageFilters
         {
             get { return (ILookup<Type, IInboundMessageFilter>)this["inboundMessageFilters"]; }
