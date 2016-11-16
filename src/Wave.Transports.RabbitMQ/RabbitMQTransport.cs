@@ -147,8 +147,18 @@ namespace Wave.Transports.RabbitMQ
 
         public void Shutdown()
         {
-            // Dispose all of the channels 
-            foreach (var channel in this.sendChannel.Values)
+            // Dispose all of the channels
+            IList<IModel> channels = new List<IModel>();
+            try
+            {
+                channels = this.sendChannel.Values;
+            }
+            catch (ObjectDisposedException)
+            {
+                // accessing sendChannel.Values can throw ObjectDisposedException; proceed with shutdown sequence
+            }
+
+            foreach (var channel in channels)
             {
                 channel.Dispose();
             }
