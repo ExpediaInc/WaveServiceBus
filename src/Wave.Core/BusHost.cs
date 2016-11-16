@@ -65,9 +65,10 @@ namespace Wave
         {
             var cancelToken = this.configuration.TokenSource.Token;
 
-            // retry forever; consider capped exponential backoff with retry limit
-            while (true)
+            bool shouldRetry;
+            do
             {
+                shouldRetry = false;
                 try
                 {
                     this.StartCore();
@@ -79,10 +80,12 @@ namespace Wave
                         throw;
                     }
 
+                    // retry forever; consider capped exponential backoff with retry limit
                     this.configuration.Logger.ErrorFormat("Exception starting bus host: {0}", ex.ToString());
-                    Task.Delay(this.configuration.AutoRecoveryInterval, cancelToken).Wait(cancelToken);                    
+                    Task.Delay(this.configuration.AutoRecoveryInterval, cancelToken).Wait(cancelToken);
+                    shouldRetry = true;
                 }
-            }
+            } while (shouldRetry);
         }
 
         private void StartCore()
