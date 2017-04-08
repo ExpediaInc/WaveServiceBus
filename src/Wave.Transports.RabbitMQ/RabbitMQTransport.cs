@@ -26,6 +26,9 @@ namespace Wave.Transports.RabbitMQ
 {    
     public class RabbitMQTransport : ITransport
     {
+        private const ushort DefaultPrimaryQueuePrefetchCount = 2;
+        private const ushort DefaultDelayQueuePrefetchCount = 1800;
+
         private readonly RabbitConnectionManager connectionManager;        
         private readonly String delayQueueName;
         private readonly String errorQueueName;
@@ -65,13 +68,13 @@ namespace Wave.Transports.RabbitMQ
             //        If AckMultiple=true and a message with a later delivery tag is acked, then the channel throws an error
             //        when trying to ack a message with a previous delivery tag since it's considered a duplicate ack.
             const bool AckMultiple = false;
-            this.GetMessages(this.delayQueueName, AckMultiple, token, onMessageReceived);
+            this.GetMessages(this.delayQueueName, AckMultiple, token, onMessageReceived, DefaultDelayQueuePrefetchCount);
         }
 
         public void GetMessages(CancellationToken token, Action<RawMessage, Action, Action> onMessageReceived)
         {
             const bool AckMultiple = true;
-            this.GetMessages(this.primaryQueueName, AckMultiple, token, onMessageReceived);
+            this.GetMessages(this.primaryQueueName, AckMultiple, token, onMessageReceived, DefaultPrimaryQueuePrefetchCount);
         }
 
         public void InitializeForConsuming()
@@ -198,14 +201,16 @@ namespace Wave.Transports.RabbitMQ
             return properties;
         }
 
-        private void GetMessages(string queueName, bool ackMultiple, CancellationToken token, Action<RawMessage, Action, Action> onMessageReceived)
+        private void GetMessages(
+            string queueName,
+            bool ackMultiple,
+            CancellationToken token,
+            Action<RawMessage, Action, Action> onMessageReceived,
+            ushort prefetchCount)
         {
             using (var channel = this.connectionManager.GetChannel())
             {
                 var consumer = new QueueingBasicConsumer(channel);
-                var prefetchCount = (this.configuration.MaxWorkers * 2) >= ushort.MaxValue
-                                        ? ushort.MaxValue
-                                        : (ushort)(this.configuration.MaxWorkers * 2);
 
                 channel.BasicQos(0, prefetchCount, false);
                 channel.BasicConsume(queueName, false, consumer);
