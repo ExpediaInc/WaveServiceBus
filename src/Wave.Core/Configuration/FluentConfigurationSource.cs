@@ -143,6 +143,18 @@ namespace Wave.Configuration
             return this;
         }
 
+        public FluentConfigurationSource WithPrefetchCount(int prefetchCount)
+        {
+            this.PrefetchCount = prefetchCount;
+            return this;
+        }
+
+        public FluentConfigurationSource WithDelayPrefetchCount(int delayPrefetchCount)
+        {
+            this.DelayPrefetchCount = delayPrefetchCount;
+            return this;
+        }
+
         /// <summary>
         /// Disables auto-recovery of the BusHost on exceptions.
         /// </summary>
@@ -213,6 +225,8 @@ namespace Wave.Configuration
         {
             this.Populate(previousSource);
             this.ConfigurationContext.MaxWorkers = this.MaxWorkers;
+            this.ConfigurationContext.PrefetchCount = this.PrefetchCount;
+            this.ConfigurationContext.DelayPrefetchCount = this.DelayPrefetchCount;
             this.ConfigurationContext.IsAutoRecoveryEnabled = this.IsAutoRecoveryEnabled;
             this.ConfigurationContext.AutoRecoveryInterval = this.AutoRecoveryInterval;
             this.ConfigurationContext.MessageRetryLimit = this.MessageRetryLimit;

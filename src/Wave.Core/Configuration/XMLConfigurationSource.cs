@@ -43,6 +43,14 @@ namespace Wave.Configuration
                 ? configSection.Settings.MessageRetryLimit
                 : ConfigurationContext.MessageRetryLimit;
 
+            this.ConfigurationContext.PrefetchCount = configSection.Settings.PrefetchCount != default(int)
+                ? configSection.Settings.PrefetchCount
+                : ConfigurationContext.PrefetchCount;
+
+            this.ConfigurationContext.DelayPrefetchCount = configSection.Settings.DelayPrefetchCount != default(int)
+                ? configSection.Settings.DelayPrefetchCount
+                : ConfigurationContext.DelayPrefetchCount;
+
             // Type mappings
             this.MergeTypeFromConfig<ILogger>(configSection.Logger);
             this.MergeTypeFromConfig<ISerializer>(configSection.Serializer);
