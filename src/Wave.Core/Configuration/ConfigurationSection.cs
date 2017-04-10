@@ -200,20 +200,6 @@ namespace Wave.Configuration
                 get { return (int)base["messageRetryLimit"]; }
                 set { base["messageRetryLimit"] = value; }
             }
-
-            [ConfigurationProperty("prefetchCount", IsRequired = false)]
-            public int PrefetchCount
-            {
-                get { return (int)base["prefetchCount"]; }
-                set { base["prefetchCount"] = value; }
-            }
-
-            [ConfigurationProperty("delayPrefetchCount", IsRequired = false)]
-            public int DelayPrefetchCount
-            {
-                get { return (int)base["delayPrefetchCount"]; }
-                set { base["delayPrefetchCount"] = value; }
-            }
         }
     }
 }

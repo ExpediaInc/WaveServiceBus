@@ -21,8 +21,6 @@ namespace Wave.Configuration
     public class ConfigurationSource
     {
         private const int DefaultMaxWorkers = 1;
-        private const int DefaultPrefetchCount = 2;
-        private const int DefaultDelayPrefetchCount = 1800;
         private const int DefaultMessageRetryLimit = 5;
         private const bool DefaultAutoRecoveryEnabled = true;
         private const int DefaultAutoRecoveryIntervalInSeconds = 5;
@@ -31,8 +29,6 @@ namespace Wave.Configuration
         private IContainer container;
 
         private int maxWorkers = DefaultMaxWorkers;
-        private int prefetchCount = DefaultPrefetchCount;
-        private int delayPrefetchCount = DefaultDelayPrefetchCount;
         private bool isAutoRecoveryEnabled = DefaultAutoRecoveryEnabled;
         private TimeSpan autoRecoveryInterval = TimeSpan.FromSeconds(DefaultAutoRecoveryIntervalInSeconds);
         private Dictionary<Type, List<IInboundMessageFilter>> inboundMessageFilters = new Dictionary<Type, List<IInboundMessageFilter>>();
@@ -57,18 +53,6 @@ namespace Wave.Configuration
         {
             get { return this.maxWorkers; }
             set { this.maxWorkers = value; }
-        }
-
-        internal int PrefetchCount
-        {
-            get { return this.prefetchCount; }
-            set { this.prefetchCount = value; }
-        }
-
-        internal int DelayPrefetchCount
-        {
-            get { return this.delayPrefetchCount; }
-            set { this.delayPrefetchCount = value; }
         }
 
         internal bool IsAutoRecoveryEnabled

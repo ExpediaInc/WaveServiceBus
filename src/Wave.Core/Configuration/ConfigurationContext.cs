@@ -64,18 +64,6 @@ namespace Wave.Configuration
             set { this["maxWorkers"] = value; }
         }
 
-        public int PrefetchCount
-        {
-            get { return (int)this["prefetchCount"]; }
-            set { this["prefetchCount"] = value; }
-        }
-
-        public int DelayPrefetchCount
-        {
-            get { return (int)this["delayPrefetchCount"]; }
-            set { this["delayPrefetchCount"] = value; }
-        }
-
         public bool IsAutoRecoveryEnabled
         {
             get { return (bool)this["isAutoRecoveryEnabled"]; }

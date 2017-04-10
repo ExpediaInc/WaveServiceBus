@@ -19,9 +19,14 @@ namespace Wave.Transports.RabbitMQ.Configuration
 {
     public class ConfigurationSettings
     {
+        private const int DefaultPrefetchCount = 2;
+        private const int DefaultDelayPrefetchCount = 1800;
+
         private bool autoDeleteQueues = false;
         private string connectionString = null;
         private string exchange = "Wave";
+        private int prefetchCount = DefaultPrefetchCount;
+        private int delayPrefetchCount = DefaultDelayPrefetchCount;
 
         public string ConnectionString 
         {
@@ -61,6 +66,22 @@ namespace Wave.Transports.RabbitMQ.Configuration
             }
         }
 
+        public int PrefetchCount
+        {
+            get
+            {
+                return this.prefetchCount;
+            }
+        }
+
+        public int DelayPrefetchCount
+        {
+            get
+            {
+                return this.delayPrefetchCount;
+            }
+        }
+
         public ConfigurationSettings UseAutoDeleteQueues()
         {
             this.autoDeleteQueues = true;
@@ -77,6 +98,18 @@ namespace Wave.Transports.RabbitMQ.Configuration
         {
             this.exchange = exchange;
             return this;
-        }        
+        }
+        
+        public ConfigurationSettings WithPrefetchCount(int prefetchCount)
+        {
+            this.prefetchCount = prefetchCount;
+            return this;
+        }
+
+        public ConfigurationSettings WithDelayPrefetchCount(int delayPrefetchCount)
+        {
+            this.delayPrefetchCount = delayPrefetchCount;
+            return this;
+        }
     }
 }

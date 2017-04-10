@@ -46,5 +46,25 @@ namespace Wave.Transports.RabbitMQ.Extensions
         {
             context["rabbitmq.exchange"] = exchange;
         }
+        
+        internal static int GetPrefetchCount(this IConfigurationContext context)
+        {
+            return (int)context["rabbitmq.prefetchCount"];
+        }
+
+        internal static void SetPrefetchCount(this IConfigurationContext context, int prefetchCount)
+        {
+            context["rabbitmq.prefetchCount"] = prefetchCount;
+        }
+        
+        internal static int GetDelayPrefetchCount(this IConfigurationContext context)
+        {
+            return (int)context["rabbitmq.delayPrefetchCount"];
+        }
+
+        internal static void SetDelayPrefetchCount(this IConfigurationContext context, int delayPrefetchCount)
+        {
+            context["rabbitmq.delayPrefetchCount"] = delayPrefetchCount;
+        }
     }
 }

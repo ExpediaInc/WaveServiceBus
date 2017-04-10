@@ -65,13 +65,13 @@ namespace Wave.Transports.RabbitMQ
             //        If AckMultiple=true and a message with a later delivery tag is acked, then the channel throws an error
             //        when trying to ack a message with a previous delivery tag since it's considered a duplicate ack.
             const bool AckMultiple = false;
-            this.GetMessages(this.delayQueueName, AckMultiple, token, onMessageReceived, this.configuration.DelayPrefetchCount);
+            this.GetMessages(this.delayQueueName, AckMultiple, token, onMessageReceived, this.configuration.GetDelayPrefetchCount());
         }
 
         public void GetMessages(CancellationToken token, Action<RawMessage, Action, Action> onMessageReceived)
         {
             const bool AckMultiple = true;
-            this.GetMessages(this.primaryQueueName, AckMultiple, token, onMessageReceived, this.configuration.PrefetchCount);
+            this.GetMessages(this.primaryQueueName, AckMultiple, token, onMessageReceived, this.configuration.GetPrefetchCount());
         }
 
         public void InitializeForConsuming()
@@ -275,6 +275,24 @@ namespace Wave.Transports.RabbitMQ
                 else if (context.GetExchange() == null)
                 {
                     context.SetExchange(defaultSettings.Exchange);
+                }
+
+                if (configSection.PrefetchCount > 0)
+                {
+                    context.SetPrefetchCount(configSection.PrefetchCount);
+                }
+                else if (context.GetPrefetchCount() > 0)
+                {
+                    context.SetPrefetchCount(defaultSettings.PrefetchCount);
+                }
+
+                if (configSection.DelayPrefetchCount > 0)
+                {
+                    context.SetDelayPrefetchCount(configSection.DelayPrefetchCount);
+                }
+                else if (context.GetDelayPrefetchCount() > 0)
+                {
+                    context.SetDelayPrefetchCount(defaultSettings.DelayPrefetchCount);
                 }
             }
 

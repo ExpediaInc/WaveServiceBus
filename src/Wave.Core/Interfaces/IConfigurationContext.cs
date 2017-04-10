@@ -29,10 +29,6 @@ namespace Wave
 
         int MaxWorkers { get; set; }
 
-        int PrefetchCount { get; set; }
-
-        int DelayPrefetchCount { get; set; }
-
         bool IsAutoRecoveryEnabled { get; set; }
 
         TimeSpan AutoRecoveryInterval { get; set; }

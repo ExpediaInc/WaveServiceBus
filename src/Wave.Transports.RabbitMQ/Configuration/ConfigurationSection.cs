@@ -39,5 +39,19 @@ namespace Wave.Transports.RabbitMQ.Configuration
             get { return bool.Parse((string)base["autoDeleteQueues"]); }
             set { base["autoDeleteQueues"] = value.ToString(); }
         }
+
+        [ConfigurationProperty("prefetchCount", IsRequired = false)]
+        public int PrefetchCount
+        {
+            get { return (int)base["prefetchCount"]; }
+            set { base["prefetchCount"] = value; }
+        }
+
+        [ConfigurationProperty("delayPrefetchCount", IsRequired = false)]
+        public int DelayPrefetchCount
+        {
+            get { return (int)base["delayPrefetchCount"]; }
+            set { base["delayPrefetchCount"] = value; }
+        }
     }
 }
