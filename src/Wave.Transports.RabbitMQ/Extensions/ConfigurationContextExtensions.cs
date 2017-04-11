@@ -46,5 +46,31 @@ namespace Wave.Transports.RabbitMQ.Extensions
         {
             context["rabbitmq.exchange"] = exchange;
         }
+        
+        internal static ushort? GetPrefetchCountPerWorker(this IConfigurationContext context)
+        {
+            ushort result;
+            return ushort.TryParse((string)context["rabbitmq.prefetchCountPerWorker"], out result)
+                ? result
+                : (ushort?)null;
+        }
+
+        internal static void SetPrefetchCountPerWorker(this IConfigurationContext context, ushort prefetchCountPerWorker)
+        {
+            context["rabbitmq.prefetchCountPerWorker"] = prefetchCountPerWorker.ToString();
+        }
+        
+        internal static ushort? GetDelayQueuePrefetchCount(this IConfigurationContext context)
+        {
+            ushort result;
+            return ushort.TryParse((string)context["rabbitmq.delayQueuePrefetchCount"], out result)
+                ? result
+                : (ushort?)null;
+        }
+
+        internal static void SetDelayQueuePrefetchCount(this IConfigurationContext context, ushort delayQueuePrefetchCount)
+        {
+            context["rabbitmq.delayQueuePrefetchCount"] = delayQueuePrefetchCount.ToString();
+        }
     }
 }

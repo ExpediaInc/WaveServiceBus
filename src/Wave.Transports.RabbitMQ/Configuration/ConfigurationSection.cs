@@ -39,5 +39,21 @@ namespace Wave.Transports.RabbitMQ.Configuration
             get { return bool.Parse((string)base["autoDeleteQueues"]); }
             set { base["autoDeleteQueues"] = value.ToString(); }
         }
+
+        // These are string instead of int because zero is a valid value, so
+        // we need to be able to distinguish between zero and not specified.
+        [ConfigurationProperty("prefetchCountPerWorker", IsRequired = false)]
+        public string PrefetchCountPerWorker
+        {
+            get { return (string)base["prefetchCountPerWorker"]; }
+            set { base["prefetchCountPerWorker"] = value; }
+        }
+
+        [ConfigurationProperty("delayQueuePrefetchCount", IsRequired = false)]
+        public string DelayQueuePrefetchCount
+        {
+            get { return (string)base["delayQueuePrefetchCount"]; }
+            set { base["delayQueuePrefetchCount"] = value; }
+        }
     }
 }

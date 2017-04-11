@@ -13,15 +13,25 @@
 *  limitations under the License.
 */
 
+using System;
 using System.Configuration;
 
 namespace Wave.Transports.RabbitMQ.Configuration
 {
     public class ConfigurationSettings
     {
+        private const ushort DefaultPrefetchCountPerWorker = 2;
+        private const ushort DefaultDelayQueuePrefetchCount = 1800;
+
         private bool autoDeleteQueues = false;
         private string connectionString = null;
         private string exchange = "Wave";
+
+        // These are stored internally as ushort because that is what RabbitMQ requires.
+        // They are exposed externally as int because this is a public class and I didn't
+        // want to break CLS compliance without permission.
+        private ushort prefetchCountPerWorker = DefaultPrefetchCountPerWorker;
+        private ushort delayQueuePrefetchCount = DefaultDelayQueuePrefetchCount;
 
         public string ConnectionString 
         {
@@ -61,6 +71,22 @@ namespace Wave.Transports.RabbitMQ.Configuration
             }
         }
 
+        public int PrefetchCountPerWorker
+        {
+            get
+            {
+                return this.prefetchCountPerWorker;
+            }
+        }
+
+        public int DelayQueuePrefetchCount
+        {
+            get
+            {
+                return this.delayQueuePrefetchCount;
+            }
+        }
+
         public ConfigurationSettings UseAutoDeleteQueues()
         {
             this.autoDeleteQueues = true;
@@ -77,6 +103,20 @@ namespace Wave.Transports.RabbitMQ.Configuration
         {
             this.exchange = exchange;
             return this;
-        }        
+        }
+        
+        // These take int arguments because I didn't want to break CLS compliance.
+        // They convert to ushort immediately to fail as early as possible if invalid.
+        public ConfigurationSettings WithPrefetchCountPerWorker(int prefetchCountPerWorker)
+        {
+            this.prefetchCountPerWorker = Convert.ToUInt16(prefetchCountPerWorker);
+            return this;
+        }
+
+        public ConfigurationSettings WithDelayQueuePrefetchCount(int delayQueuePrefetchCount)
+        {
+            this.delayQueuePrefetchCount = Convert.ToUInt16(delayQueuePrefetchCount);
+            return this;
+        }
     }
 }
