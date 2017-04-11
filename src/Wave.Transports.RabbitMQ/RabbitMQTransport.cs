@@ -290,7 +290,7 @@ namespace Wave.Transports.RabbitMQ
                 {
                     context.SetDelayQueuePrefetchCount(Convert.ToUInt16(configSection.DelayQueuePrefetchCount));
                 }
-                else if (context.GetDelayQueuePrefetchCount() == null) // -1 indicate the value was never set
+                else if (context.GetDelayQueuePrefetchCount() == null)
                 {
                     context.SetDelayQueuePrefetchCount(Convert.ToUInt16(defaultSettings.DelayQueuePrefetchCount));
                 }
