@@ -47,24 +47,30 @@ namespace Wave.Transports.RabbitMQ.Extensions
             context["rabbitmq.exchange"] = exchange;
         }
         
-        internal static int GetPrefetchCount(this IConfigurationContext context)
+        internal static ushort? GetPrefetchCountPerWorker(this IConfigurationContext context)
         {
-            return (int)context["rabbitmq.prefetchCount"];
+            ushort result;
+            return ushort.TryParse((string)context["rabbitmq.prefetchCountPerWorker"], out result)
+                ? result
+                : (ushort?)null;
         }
 
-        internal static void SetPrefetchCount(this IConfigurationContext context, int prefetchCount)
+        internal static void SetPrefetchCountPerWorker(this IConfigurationContext context, ushort prefetchCountPerWorker)
         {
-            context["rabbitmq.prefetchCount"] = prefetchCount;
+            context["rabbitmq.prefetchCountPerWorker"] = prefetchCountPerWorker.ToString();
         }
         
-        internal static int GetDelayPrefetchCount(this IConfigurationContext context)
+        internal static ushort? GetDelayQueuePrefetchCount(this IConfigurationContext context)
         {
-            return (int)context["rabbitmq.delayPrefetchCount"];
+            ushort result;
+            return ushort.TryParse((string)context["rabbitmq.delayQueuePrefetchCount"], out result)
+                ? result
+                : (ushort?)null;
         }
 
-        internal static void SetDelayPrefetchCount(this IConfigurationContext context, int delayPrefetchCount)
+        internal static void SetDelayQueuePrefetchCount(this IConfigurationContext context, ushort delayQueuePrefetchCount)
         {
-            context["rabbitmq.delayPrefetchCount"] = delayPrefetchCount;
+            context["rabbitmq.delayQueuePrefetchCount"] = delayQueuePrefetchCount.ToString();
         }
     }
 }

@@ -13,20 +13,25 @@
 *  limitations under the License.
 */
 
+using System;
 using System.Configuration;
 
 namespace Wave.Transports.RabbitMQ.Configuration
 {
     public class ConfigurationSettings
     {
-        private const int DefaultPrefetchCount = 2;
-        private const int DefaultDelayPrefetchCount = 1800;
+        private const ushort DefaultPrefetchCountPerWorker = 2;
+        private const ushort DefaultDelayQueuePrefetchCount = 1800;
 
         private bool autoDeleteQueues = false;
         private string connectionString = null;
         private string exchange = "Wave";
-        private int prefetchCount = DefaultPrefetchCount;
-        private int delayPrefetchCount = DefaultDelayPrefetchCount;
+
+        // These are stored internally as ushort because that is what RabbitMQ requires.
+        // They are exposed externally as int because this is a public class and I didn't
+        // want to break CLS compliance without permission.
+        private ushort prefetchCountPerWorker = DefaultPrefetchCountPerWorker;
+        private ushort delayQueuePrefetchCount = DefaultDelayQueuePrefetchCount;
 
         public string ConnectionString 
         {
@@ -66,19 +71,19 @@ namespace Wave.Transports.RabbitMQ.Configuration
             }
         }
 
-        public int PrefetchCount
+        public int PrefetchCountPerWorker
         {
             get
             {
-                return this.prefetchCount;
+                return this.prefetchCountPerWorker;
             }
         }
 
-        public int DelayPrefetchCount
+        public int DelayQueuePrefetchCount
         {
             get
             {
-                return this.delayPrefetchCount;
+                return this.delayQueuePrefetchCount;
             }
         }
 
@@ -100,15 +105,17 @@ namespace Wave.Transports.RabbitMQ.Configuration
             return this;
         }
         
-        public ConfigurationSettings WithPrefetchCount(int prefetchCount)
+        // These take int arguments because I didn't want to break CLS compliance.
+        // They convert to ushort immediately to fail as early as possible if invalid.
+        public ConfigurationSettings WithPrefetchCountPerWorker(int prefetchCountPerWorker)
         {
-            this.prefetchCount = prefetchCount;
+            this.prefetchCountPerWorker = Convert.ToUInt16(prefetchCountPerWorker);
             return this;
         }
 
-        public ConfigurationSettings WithDelayPrefetchCount(int delayPrefetchCount)
+        public ConfigurationSettings WithDelayQueuePrefetchCount(int delayQueuePrefetchCount)
         {
-            this.delayPrefetchCount = delayPrefetchCount;
+            this.delayQueuePrefetchCount = Convert.ToUInt16(delayQueuePrefetchCount);
             return this;
         }
     }

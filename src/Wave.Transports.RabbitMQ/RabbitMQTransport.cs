@@ -65,13 +65,13 @@ namespace Wave.Transports.RabbitMQ
             //        If AckMultiple=true and a message with a later delivery tag is acked, then the channel throws an error
             //        when trying to ack a message with a previous delivery tag since it's considered a duplicate ack.
             const bool AckMultiple = false;
-            this.GetMessages(this.delayQueueName, AckMultiple, token, onMessageReceived, this.configuration.GetDelayPrefetchCount());
+            this.GetMessages(this.delayQueueName, AckMultiple, token, onMessageReceived, this.configuration.GetDelayQueuePrefetchCount().Value);
         }
 
         public void GetMessages(CancellationToken token, Action<RawMessage, Action, Action> onMessageReceived)
         {
             const bool AckMultiple = true;
-            this.GetMessages(this.primaryQueueName, AckMultiple, token, onMessageReceived, this.configuration.GetPrefetchCount());
+            this.GetMessages(this.primaryQueueName, AckMultiple, token, onMessageReceived, this.configuration.GetPrefetchCountPerWorker().Value);
         }
 
         public void InitializeForConsuming()
@@ -203,13 +203,13 @@ namespace Wave.Transports.RabbitMQ
             bool ackMultiple,
             CancellationToken token,
             Action<RawMessage, Action, Action> onMessageReceived,
-            int prefetchCount)
+            ushort prefetchCount)
         {
             using (var channel = this.connectionManager.GetChannel())
             {
                 var consumer = new QueueingBasicConsumer(channel);
 
-                channel.BasicQos(0, Convert.ToUInt16(prefetchCount), false);
+                channel.BasicQos(0, prefetchCount, false);
                 channel.BasicConsume(queueName, false, consumer);
 
                 while (true)
@@ -277,22 +277,22 @@ namespace Wave.Transports.RabbitMQ
                     context.SetExchange(defaultSettings.Exchange);
                 }
 
-                if (configSection.PrefetchCount > 0)
+                if (!String.IsNullOrWhiteSpace(configSection.PrefetchCountPerWorker))
                 {
-                    context.SetPrefetchCount(configSection.PrefetchCount);
+                    context.SetPrefetchCountPerWorker(Convert.ToUInt16(configSection.PrefetchCountPerWorker));
                 }
-                else if (context.GetPrefetchCount() > 0)
+                else if (context.GetPrefetchCountPerWorker() == null)
                 {
-                    context.SetPrefetchCount(defaultSettings.PrefetchCount);
+                    context.SetPrefetchCountPerWorker(Convert.ToUInt16(defaultSettings.PrefetchCountPerWorker));
                 }
 
-                if (configSection.DelayPrefetchCount > 0)
+                if (!String.IsNullOrWhiteSpace(configSection.DelayQueuePrefetchCount))
                 {
-                    context.SetDelayPrefetchCount(configSection.DelayPrefetchCount);
+                    context.SetDelayQueuePrefetchCount(Convert.ToUInt16(configSection.DelayQueuePrefetchCount));
                 }
-                else if (context.GetDelayPrefetchCount() > 0)
+                else if (context.GetDelayQueuePrefetchCount() == null) // -1 indicate the value was never set
                 {
-                    context.SetDelayPrefetchCount(defaultSettings.DelayPrefetchCount);
+                    context.SetDelayQueuePrefetchCount(Convert.ToUInt16(defaultSettings.DelayQueuePrefetchCount));
                 }
             }
 

@@ -38,8 +38,8 @@ namespace Wave
                 context.SetAutoDeleteQueues(settings.AutoDeleteQueues);
                 context.SetConnectionString(settings.ConnectionString);
                 context.SetExchange(settings.Exchange);
-                context.SetPrefetchCount(settings.PrefetchCount);
-                context.SetDelayPrefetchCount(settings.DelayPrefetchCount);
+                context.SetPrefetchCountPerWorker(Convert.ToUInt16(settings.PrefetchCountPerWorker));
+                context.SetDelayQueuePrefetchCount(Convert.ToUInt16(settings.DelayQueuePrefetchCount));
             });
         }
     }
