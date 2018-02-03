@@ -90,6 +90,7 @@ namespace Wave
                 this.Headers["RetryCount"] = value.ToString();
             }
         }
+
         public string Type
         {
             get
@@ -108,14 +109,22 @@ namespace Wave
             }
         }
 
+        public byte Priority { get; set; }
+
         public static RawMessage Create(object message)
+        {
+            return Create(message, priority: 0);
+        }
+
+        public static RawMessage Create(object message, byte priority)
         {
             return new RawMessage
             {
                 Data = ConfigurationContext.Current.Serializer.Serialize(message),
                 Id = Guid.NewGuid(),
                 Type = ConfigurationContext.Current.SubscriptionKeyResolver.GetKey(message.GetType()),
-                ReplyTopic = ConfigurationContext.Current.QueueNameResolver.GetPrimaryQueueName()
+                ReplyTopic = ConfigurationContext.Current.QueueNameResolver.GetPrimaryQueueName(),
+                Priority = priority
             };
         }
 

@@ -19,6 +19,10 @@ namespace Wave
     {
         void Publish(object message);
 
+        void Publish(object message, byte priority);
+
         void Send(string route, object message);
+
+        void Send(string route, object message, byte priority);
     }
 }

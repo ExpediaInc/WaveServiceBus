@@ -32,6 +32,8 @@ namespace Wave
 
         void Send(string subscription, object message);
 
+        void Send(string subscription, object message, byte priority);
+
         void Send(string subscription, RawMessage message);
 
         void SendToDelay(RawMessage message);

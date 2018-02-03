@@ -103,6 +103,17 @@ namespace Wave.Defaults
         }
 
         /// <summary>
+        /// Sends a message to all queues that subscribe to the subscription, with the specified priority
+        /// </summary>
+        /// <param name="subscription"></param>
+        /// <param name="message"></param>
+        /// <param name="priority"></param>
+        public void Send(string subscription, object message, byte priority)
+        {
+            this.Send(subscription, RawMessage.Create(message, priority));
+        }
+
+        /// <summary>
         /// Sends a message to all queues that subscribe to the subscription
         /// </summary>
         /// <param name="subscription"></param>

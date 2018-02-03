@@ -39,14 +39,24 @@ namespace Wave
 
         public void Publish(object message)
         {
-            this.Send(this.keyResolver.GetKey(message.GetType()), message);
+            Publish(message, priority: 0);
+        }
+
+        public void Publish(object message, byte priority)
+        {
+            this.Send(this.keyResolver.GetKey(message.GetType()), message, priority);
         }
 
         public void Send(string route, object message)
         {
+            Send(route, message, priority: 0);
+        }
+
+        public void Send(string route, object message, byte priority)
+        {
             if (this.PerformFilters(message.GetType(), route, message))
             {
-                this.transport.Send(route, message);
+                this.transport.Send(route, message, priority);
             }
         }
 

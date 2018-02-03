@@ -81,7 +81,13 @@ namespace Wave.Transports.RabbitMQ
             using (var channel = this.connectionManager.GetChannel())
             {
                 var autoDelete = this.configuration.GetAutoDeleteQueues();
-                var workQueue = channel.QueueDeclare(this.primaryQueueName, true, autoDelete, autoDelete, null);
+                var maxPriority = (int)this.configuration.GetMaxPriority();
+
+                IDictionary<string, object> primaryQueueArguments = maxPriority > 0
+                    ? new Dictionary<string, object> { {"x-max-priority", maxPriority} }
+                    : null;
+
+                var workQueue = channel.QueueDeclare(this.primaryQueueName, true, autoDelete, autoDelete, primaryQueueArguments);
                 var delayQueue = channel.QueueDeclare(this.delayQueueName, true, autoDelete, autoDelete, null);
                 var errorQueue = channel.QueueDeclare(this.errorQueueName, true, autoDelete, autoDelete, null);
 
@@ -113,6 +119,11 @@ namespace Wave.Transports.RabbitMQ
         public void Send(string subscription, object message)
         {
             this.Send(subscription, RawMessage.Create(message));
+        }
+
+        public void Send(string subscription, object message, byte priority)
+        {
+            this.Send(subscription, RawMessage.Create(message, priority));
         }
 
         public void Send(string subscription, RawMessage message)
@@ -189,6 +200,7 @@ namespace Wave.Transports.RabbitMQ
             properties.SetPersistent(true);
             properties.Timestamp = new AmqpTimestamp((long)(DateTime.UtcNow - new DateTime(1970, 1, 1, 0, 0, 0)).TotalSeconds);
             properties.Headers = new Dictionary<String,Object>();
+            properties.Priority = message.Priority;
 
             foreach (var pair in message.Headers)
             {

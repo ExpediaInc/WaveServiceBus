@@ -55,5 +55,12 @@ namespace Wave.Transports.RabbitMQ.Configuration
             get { return (string)base["delayQueuePrefetchCount"]; }
             set { base["delayQueuePrefetchCount"] = value; }
         }
+
+        [ConfigurationProperty("maxPriority", IsRequired = false)]
+        public byte MaxPriority
+        {
+            get { return byte.Parse((string)base["maxPriority"]); }
+            set { base["maxPriority"] = value.ToString(); }
+        }
     }
 }

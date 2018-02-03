@@ -22,6 +22,7 @@ namespace Wave.Transports.RabbitMQ.Configuration
     {
         private const ushort DefaultPrefetchCountPerWorker = 2;
         private const ushort DefaultDelayQueuePrefetchCount = 1800;
+        private const byte DefaultMaxPriority = 0;
 
         private bool autoDeleteQueues = false;
         private string connectionString = null;
@@ -32,6 +33,8 @@ namespace Wave.Transports.RabbitMQ.Configuration
         // want to break CLS compliance without permission.
         private ushort prefetchCountPerWorker = DefaultPrefetchCountPerWorker;
         private ushort delayQueuePrefetchCount = DefaultDelayQueuePrefetchCount;
+
+        private byte maxPriority = DefaultMaxPriority;
 
         public string ConnectionString 
         {
@@ -87,6 +90,14 @@ namespace Wave.Transports.RabbitMQ.Configuration
             }
         }
 
+        public byte MaxPriority
+        {
+            get
+            {
+                return this.maxPriority;
+            }
+        }
+
         public ConfigurationSettings UseAutoDeleteQueues()
         {
             this.autoDeleteQueues = true;
@@ -116,6 +127,12 @@ namespace Wave.Transports.RabbitMQ.Configuration
         public ConfigurationSettings WithDelayQueuePrefetchCount(int delayQueuePrefetchCount)
         {
             this.delayQueuePrefetchCount = Convert.ToUInt16(delayQueuePrefetchCount);
+            return this;
+        }
+
+        public ConfigurationSettings WithMaxPriority(byte maxPriority)
+        {
+            this.maxPriority = maxPriority;
             return this;
         }
     }

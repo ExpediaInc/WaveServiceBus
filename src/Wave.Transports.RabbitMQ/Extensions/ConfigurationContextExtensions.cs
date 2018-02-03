@@ -72,5 +72,18 @@ namespace Wave.Transports.RabbitMQ.Extensions
         {
             context["rabbitmq.delayQueuePrefetchCount"] = delayQueuePrefetchCount.ToString();
         }
+
+        internal static byte GetMaxPriority(this IConfigurationContext context)
+        {
+            byte result;
+            return byte.TryParse((string)context["rabbitmq.maxPriority"], out result)
+                ? result
+                : (byte)0;
+        }
+
+        internal static void SetMaxPriority(this IConfigurationContext context, byte maxPriority)
+        {
+            context["rabbitmq.maxPriority"] = maxPriority.ToString();
+        }
     }
 }
