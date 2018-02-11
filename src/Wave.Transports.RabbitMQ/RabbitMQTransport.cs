@@ -181,6 +181,11 @@ namespace Wave.Transports.RabbitMQ
             this.connectionManager.Shutdown();
         }
 
+        internal Version ServerVersion
+        {
+            get { return this.connectionManager.ServerVersion; }
+        }
+
         private void DeclareExchange()
         {
             using (var channel = this.connectionManager.GetChannel())
@@ -243,7 +248,8 @@ namespace Wave.Transports.RabbitMQ
                         var rawMessage = new RawMessage
                         {
                             Data = this.configuration.Serializer.Encoding.GetString(rabbitMessage.Body),
-                            Id = new Guid(rabbitMessage.BasicProperties.MessageId)
+                            Id = new Guid(rabbitMessage.BasicProperties.MessageId),
+                            Priority = rabbitMessage.BasicProperties.Priority
                         };
 
                         foreach (var header in rabbitMessage.BasicProperties.Headers)

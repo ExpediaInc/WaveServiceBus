@@ -16,6 +16,10 @@
 using NUnit.Framework;
 using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.Linq;
+using System.Runtime.Serialization;
+using System.Threading;
 using Wave.Configuration;
 using Wave.Tests;
 using Wave.Tests.Internal;
@@ -33,27 +37,10 @@ namespace Wave.Transports.RabbitMQ.Tests
     {
         private const string connectionString = "amqp://guest:guest@localhost:5672/";
         private const string exchange = "Wave";
+
+        private static readonly Version priorityQueuesMinimumServerVersion = new Version(3, 5, 0);
+
         private ConcurrentBag<Guid> usedGuids = new ConcurrentBag<Guid>();
-
-        public override ITransport GetTransport()
-        {
-            // Each Transport uses a unique Guid as the queue base to ensure the tests are isolated            
-            var transportGuid = Guid.NewGuid();
-            usedGuids.Add(transportGuid);
-
-            var config = new ConfigurationBuilder();
-            config.ConfigureAndCreateContext(x =>
-                {
-                    x.UsingAssemblyLocator<TestAssemblyLocator>();
-                    x.UseRabbitMQ(r =>
-                        {
-                            r.UseConnectionString(connectionString);
-                            r.UseExchange(exchange);
-                        });
-                });
-
-            return new RabbitMQTransport(transportGuid.ToString(), config.ConfigurationContext);                                         
-        }
 
         [SetUp]
         public void Setup()
@@ -73,12 +60,130 @@ namespace Wave.Transports.RabbitMQ.Tests
                 {
                     foreach (var guid in usedGuids)
                     {
-                        channel.QueueDelete(guid.ToString());
-                        channel.QueueDelete(guid.ToString() + "_Delay");
-                        channel.QueueDelete(guid.ToString() + "_Error");
+                        channel.QueueDelete(guid.ToString(), ifUnused: false, ifEmpty: false);
+                        channel.QueueDelete(guid.ToString() + "_Delay", ifUnused: false, ifEmpty: false);
+                        channel.QueueDelete(guid.ToString() + "_Error", ifUnused: false, ifEmpty: false);
                     }              
                 }
             #endif
+        }
+
+        public override ITransport GetTransport()
+        {
+            return GetTransportWithMaxPriority(maxPriority: 0);
+        }
+
+        [Test]
+        public void Send_Puts_Message_With_Priority_In_Front_Of_Primary_Queue()
+        {
+            var transport = this.GetTransportWithMaxPriority(maxPriority: 1);
+
+            var lowPriorityMessage = new PriorityTestMessage { Priority = 0 };
+            var highPriorityMessage = new PriorityTestMessage { Priority = 1 };
+            var messagesReturned = new List<RawMessage>();
+
+            transport.RegisterSubscription(typeof(TestMessage).Name);
+
+            transport.Send(typeof(TestMessage).Name, lowPriorityMessage, lowPriorityMessage.Priority);
+            transport.Send(typeof(TestMessage).Name, lowPriorityMessage, lowPriorityMessage.Priority);
+            transport.Send(typeof(TestMessage).Name, highPriorityMessage, highPriorityMessage.Priority);
+
+            this.RunBlocking((unblockEvent) =>
+            {
+                transport.GetMessages(new CancellationToken(),
+                    (message, ack, reject) =>
+                    {
+                        messagesReturned.Add(message);
+                        ack();
+                        if (messagesReturned.Count == 3)
+                        {
+                            unblockEvent.Set();
+                        }
+                    });
+            }, TimeSpan.FromSeconds(15));
+
+            Assert.AreEqual(3, messagesReturned.Count);
+            VerifyMessagePriority(messagesReturned.First(), highPriorityMessage.Priority);
+        }
+
+        [Test]
+        public void Send_Does_Not_Put_Message_With_Priority_In_Front_Of_Primary_Queue_When_MaxPriority_Is_Not_Set()
+        {
+            var transport = this.GetTransportWithMaxPriority(maxPriority: 0);
+
+            var lowPriorityMessage = new PriorityTestMessage { Priority = 0 };
+            var highPriorityMessage = new PriorityTestMessage { Priority = 1 };
+            var messagesReturned = new List<RawMessage>();
+
+            transport.RegisterSubscription(typeof(TestMessage).Name);
+
+            transport.Send(typeof(TestMessage).Name, lowPriorityMessage, lowPriorityMessage.Priority);
+            transport.Send(typeof(TestMessage).Name, lowPriorityMessage, lowPriorityMessage.Priority);
+            transport.Send(typeof(TestMessage).Name, highPriorityMessage, highPriorityMessage.Priority);
+
+            this.RunBlocking((unblockEvent) =>
+            {
+                transport.GetMessages(new CancellationToken(),
+                    (message, ack, reject) =>
+                    {
+                        messagesReturned.Add(message);
+                        ack();
+                        if (messagesReturned.Count == 3)
+                        {
+                            unblockEvent.Set();
+                        }
+                    });
+            }, TimeSpan.FromSeconds(15));
+
+            Assert.AreEqual(3, messagesReturned.Count);
+            VerifyMessagePriority(messagesReturned.Last(), highPriorityMessage.Priority);
+        }
+
+        private ITransport GetTransportWithMaxPriority(byte maxPriority)
+        {
+            // Each Transport uses a unique Guid as the queue base to ensure the tests are isolated            
+            var transportGuid = Guid.NewGuid();
+            usedGuids.Add(transportGuid);
+
+            var config = new ConfigurationBuilder();
+            config.ConfigureAndCreateContext(x =>
+            {
+                x.UsingAssemblyLocator<TestAssemblyLocator>();
+                x.UseRabbitMQ(r =>
+                {
+                    r.UseConnectionString(connectionString);
+                    r.UseExchange(exchange);
+                    r.WithMaxPriority(maxPriority);
+                });
+            });
+
+            var transport = new RabbitMQTransport(transportGuid.ToString(), config.ConfigurationContext);
+
+            if ((maxPriority > 0) && (transport.ServerVersion < priorityQueuesMinimumServerVersion))
+            {
+                Assert.Inconclusive("Priority queues are only supported on version {0} and higher.", priorityQueuesMinimumServerVersion);
+            }
+
+            transport.InitializeForConsuming();
+            transport.InitializeForPublishing();
+            return transport;
+        }
+
+        private static void VerifyMessagePriority(RawMessage rawMessage, byte expectedPriority)
+        {
+            Assert.AreEqual(expectedPriority, rawMessage.Priority);
+
+            var testMessage = (PriorityTestMessage)ConfigurationContext.Current.Serializer
+                .Deserialize(rawMessage.Data, typeof(PriorityTestMessage));
+
+            Assert.AreEqual(expectedPriority, testMessage.Priority);
+        }
+
+        [DataContract]
+        private class PriorityTestMessage : TestMessage
+        {
+            [DataMember]
+            public byte Priority { get; set; }
         }
     }
 }
