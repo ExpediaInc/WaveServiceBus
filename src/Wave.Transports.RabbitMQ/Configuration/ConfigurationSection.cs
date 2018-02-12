@@ -57,10 +57,10 @@ namespace Wave.Transports.RabbitMQ.Configuration
         }
 
         [ConfigurationProperty("maxPriority", IsRequired = false)]
-        public byte MaxPriority
+        public string MaxPriority
         {
-            get { return byte.Parse((string)base["maxPriority"]); }
-            set { base["maxPriority"] = value.ToString(); }
+            get { return (string)base["maxPriority"]; }
+            set { base["maxPriority"] = value; }
         }
     }
 }

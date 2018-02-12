@@ -312,6 +312,15 @@ namespace Wave.Transports.RabbitMQ
                 {
                     context.SetDelayQueuePrefetchCount(Convert.ToUInt16(defaultSettings.DelayQueuePrefetchCount));
                 }
+
+                if (!String.IsNullOrWhiteSpace(configSection.MaxPriority))
+                {
+                    context.SetMaxPriority(Convert.ToByte(configSection.MaxPriority));
+                }
+                else if (context.GetMaxPriority() == null)
+                {
+                    context.SetMaxPriority(defaultSettings.MaxPriority);
+                }
             }
 
             return context;
