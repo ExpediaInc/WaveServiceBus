@@ -16,6 +16,8 @@
 using NUnit.Framework;
 using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.Threading;
 using Wave.Configuration;
 using Wave.Tests;
 using Wave.Tests.Internal;
@@ -37,22 +39,7 @@ namespace Wave.Transports.RabbitMQ.Tests
 
         public override ITransport GetTransport()
         {
-            // Each Transport uses a unique Guid as the queue base to ensure the tests are isolated            
-            var transportGuid = Guid.NewGuid();
-            usedGuids.Add(transportGuid);
-
-            var config = new ConfigurationBuilder();
-            config.ConfigureAndCreateContext(x =>
-                {
-                    x.UsingAssemblyLocator<TestAssemblyLocator>();
-                    x.UseRabbitMQ(r =>
-                        {
-                            r.UseConnectionString(connectionString);
-                            r.UseExchange(exchange);
-                        });
-                });
-
-            return new RabbitMQTransport(transportGuid.ToString(), config.ConfigurationContext);                                         
+            return GetTransport(primaryQueueArguments: null);
         }
 
         [SetUp]
@@ -73,12 +60,90 @@ namespace Wave.Transports.RabbitMQ.Tests
                 {
                     foreach (var guid in usedGuids)
                     {
-                        channel.QueueDelete(guid.ToString());
-                        channel.QueueDelete(guid.ToString() + "_Delay");
-                        channel.QueueDelete(guid.ToString() + "_Error");
+                        channel.QueueDelete(guid.ToString(), ifUnused: false, ifEmpty: false);
+                        channel.QueueDelete(guid + "_Delay", ifUnused: false, ifEmpty: false);
+                        channel.QueueDelete(guid + "_Error", ifUnused: false, ifEmpty: false);
                     }              
                 }
             #endif
+        }
+
+        // TODO: This just ensures that queue creation doesn't fail and send works normally.
+        //       When message-level manipulation is added, an end-to-end test will be added using priority,
+        //       that will test primary queue arguments at the same time.
+        [Test]
+        public void SendToPrimary_With_Valid_Primary_Queue_Arguments_Puts_Message_In_Primary_Queue()
+        {
+            IReadOnlyDictionary<string, object> validPrimaryQueueArguments = new Dictionary<string, object>
+            {
+                { "x-max-length", 10000 },
+                { "x-message-ttl", 86400000 }
+            };
+
+            var transport = this.GetTransport(validPrimaryQueueArguments);
+            var testMessage = new TestMessage();
+            var returnedMessage = (RawMessage)null;
+
+            transport.RegisterSubscription(typeof(TestMessage).Name);
+            transport.Send(typeof(TestMessage).Name, testMessage);
+
+            this.RunBlocking(unblockEvent =>
+            {
+                transport.GetMessages(new CancellationToken(),
+                    (message, ack, reject) =>
+                    {
+                        returnedMessage = message;
+                        ack();
+                        unblockEvent.Set();
+                    });
+            }, TimeSpan.FromSeconds(15));
+
+            Assert.IsNotNull(returnedMessage);
+        }
+
+        [Test]
+        public void Lets_Exception_Bubble_Out_If_Primary_Queue_Arguments_Are_Invalid()
+        {
+            IReadOnlyDictionary<string, object> primaryQueueArguments = new Dictionary<string, object>
+            {
+                { "x-max-length", 10000 },
+                { "x-message-ttl", "invalid" }
+            };
+
+            try
+            {
+                this.GetTransport(primaryQueueArguments);
+            }
+            catch (Exception)
+            {
+                return; // expected result, but don't care what the exception is.
+            }
+
+            Assert.Fail("Exception did not bubble out for invalid primary queue argument.");
+        }
+
+        private ITransport GetTransport(IReadOnlyDictionary<string, object> primaryQueueArguments)
+        {
+            // Each Transport uses a unique Guid as the queue base to ensure the tests are isolated            
+            var transportGuid = Guid.NewGuid();
+            usedGuids.Add(transportGuid);
+
+            var config = new ConfigurationBuilder();
+            config.ConfigureAndCreateContext(x =>
+            {
+                x.UsingAssemblyLocator<TestAssemblyLocator>();
+                x.UseRabbitMQ(r =>
+                {
+                    r.UseConnectionString(connectionString);
+                    r.UseExchange(exchange);
+                    r.WithPrimaryQueueArguments(primaryQueueArguments);
+                });
+            });
+
+            var transport = new RabbitMQTransport(transportGuid.ToString(), config.ConfigurationContext);
+            transport.InitializeForConsuming();
+            transport.InitializeForPublishing();
+            return transport;
         }
     }
 }

@@ -81,7 +81,9 @@ namespace Wave.Transports.RabbitMQ
             using (var channel = this.connectionManager.GetChannel())
             {
                 var autoDelete = this.configuration.GetAutoDeleteQueues();
-                var workQueue = channel.QueueDeclare(this.primaryQueueName, true, autoDelete, autoDelete, null);
+                var primaryQueueArguments = this.configuration.GetPrimaryQueueArguments();
+
+                var workQueue = channel.QueueDeclare(this.primaryQueueName, true, autoDelete, autoDelete, primaryQueueArguments);
                 var delayQueue = channel.QueueDeclare(this.delayQueueName, true, autoDelete, autoDelete, null);
                 var errorQueue = channel.QueueDeclare(this.errorQueueName, true, autoDelete, autoDelete, null);
 
