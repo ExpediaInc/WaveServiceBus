@@ -14,6 +14,7 @@
 */
 
 using System;
+using System.Collections.Generic;
 using System.Configuration;
 
 namespace Wave.Transports.RabbitMQ.Configuration
@@ -32,6 +33,7 @@ namespace Wave.Transports.RabbitMQ.Configuration
         // want to break CLS compliance without permission.
         private ushort prefetchCountPerWorker = DefaultPrefetchCountPerWorker;
         private ushort delayQueuePrefetchCount = DefaultDelayQueuePrefetchCount;
+        private IReadOnlyDictionary<string, object> primaryQueueArguments;
 
         public string ConnectionString 
         {
@@ -87,6 +89,14 @@ namespace Wave.Transports.RabbitMQ.Configuration
             }
         }
 
+        public IReadOnlyDictionary<string, object> PrimaryQueueArguments
+        {
+            get
+            {
+                return this.primaryQueueArguments;
+            }
+        }
+
         public ConfigurationSettings UseAutoDeleteQueues()
         {
             this.autoDeleteQueues = true;
@@ -116,6 +126,12 @@ namespace Wave.Transports.RabbitMQ.Configuration
         public ConfigurationSettings WithDelayQueuePrefetchCount(int delayQueuePrefetchCount)
         {
             this.delayQueuePrefetchCount = Convert.ToUInt16(delayQueuePrefetchCount);
+            return this;
+        }
+
+        public ConfigurationSettings WithPrimaryQueueArguments(IReadOnlyDictionary<string, object> arguments)
+        {
+            this.primaryQueueArguments = arguments;
             return this;
         }
     }

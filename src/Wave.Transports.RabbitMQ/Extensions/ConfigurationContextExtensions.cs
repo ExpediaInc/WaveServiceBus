@@ -13,6 +13,8 @@
 *  limitations under the License.
 */
 
+using System.Collections.Generic;
+
 namespace Wave.Transports.RabbitMQ.Extensions
 {
     internal static class ConfigurationContextExtensions
@@ -71,6 +73,16 @@ namespace Wave.Transports.RabbitMQ.Extensions
         internal static void SetDelayQueuePrefetchCount(this IConfigurationContext context, ushort delayQueuePrefetchCount)
         {
             context["rabbitmq.delayQueuePrefetchCount"] = delayQueuePrefetchCount.ToString();
+        }
+
+        internal static IDictionary<string, object> GetPrimaryQueueArguments(this IConfigurationContext context)
+        {
+            return context["rabbitmq.primaryQueueArguments"] as IDictionary<string, object>;
+        }
+
+        internal static void SetPrimaryQueueArguments(this IConfigurationContext context, IReadOnlyDictionary<string, object> primaryQueueArguments)
+        {
+            context["rabbitmq.primaryQueueArguments"] = primaryQueueArguments;
         }
     }
 }
