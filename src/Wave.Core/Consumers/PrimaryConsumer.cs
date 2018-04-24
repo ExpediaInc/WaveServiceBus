@@ -81,6 +81,7 @@ namespace Wave.Consumers
                     message.RetryCount,
                     message.ReplyTopic,
                     message.Headers,
+                    message.Metadata
                 });
 
             // Invoke OnHandlerExecuting method on filters

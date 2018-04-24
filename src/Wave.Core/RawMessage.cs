@@ -15,6 +15,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Wave.Configuration;
 
 namespace Wave
@@ -26,6 +27,7 @@ namespace Wave
     public class RawMessage
     {
         private Dictionary<string, string> headers;
+        private Dictionary<string, string> metadata;
 
         public string Data { get; set; }
 
@@ -51,6 +53,12 @@ namespace Wave
         {
             get { return this.headers ?? (this.headers = new Dictionary<string, string>()); }
             set { this.headers = value; }
+        }
+
+        public Dictionary<string, string> Metadata
+        {
+            get { return this.metadata ?? (this.metadata = new Dictionary<string, string>()); }
+            set { this.metadata = value; }
         }
 
         public Guid Id { get; set; }
@@ -117,6 +125,15 @@ namespace Wave
                 Type = ConfigurationContext.Current.SubscriptionKeyResolver.GetKey(message.GetType()),
                 ReplyTopic = ConfigurationContext.Current.QueueNameResolver.GetPrimaryQueueName()
             };
+        }
+
+        public static RawMessage Create<T>(IMessage<T> message)
+        {
+            var rawMessage = Create(message.Content);
+            rawMessage.metadata = message.Metadata
+                .ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
+
+            return rawMessage;
         }
 
         public override string ToString()

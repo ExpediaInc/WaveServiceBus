@@ -42,9 +42,22 @@ namespace Wave
             this.Send(this.keyResolver.GetKey(message.GetType()), message);
         }
 
+        public void Publish<T>(IMessage<T> message)
+        {
+            this.Send(this.keyResolver.GetKey(typeof(T)), message);
+        }
+
         public void Send(string route, object message)
         {
             if (this.PerformFilters(message.GetType(), route, message))
+            {
+                this.transport.Send(route, message);
+            }
+        }
+
+        public void Send<T>(string route, IMessage<T> message)
+        {
+            if (this.PerformFilters(typeof(T), route, message.Content))
             {
                 this.transport.Send(route, message);
             }

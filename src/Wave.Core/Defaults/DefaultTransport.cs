@@ -107,6 +107,16 @@ namespace Wave.Defaults
         /// </summary>
         /// <param name="subscription"></param>
         /// <param name="message"></param>
+        public void Send<T>(string subscription, IMessage<T> message)
+        {
+            this.Send(subscription, RawMessage.Create(message));
+        }
+
+        /// <summary>
+        /// Sends a message to all queues that subscribe to the subscription
+        /// </summary>
+        /// <param name="subscription"></param>
+        /// <param name="message"></param>
         public void Send(string subscription, RawMessage message)
         {
             if (this.primaryQueue.Enqueue(subscription, message))

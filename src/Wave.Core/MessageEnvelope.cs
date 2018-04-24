@@ -27,12 +27,14 @@ namespace Wave
             DateTime? delayUntil,
             int retryCount,
             string replyTopic,
-            Dictionary<string, string> headers)
+            Dictionary<string, string> headers,
+            Dictionary<string, string> metadata)
         {
             this.Id = id;
             this.Content = content;
             this.RetryCount = retryCount;
             this.Headers = headers;
+            this.Metadata = metadata;
             this.DelayUntil = delayUntil;
             this.ReplyTopic = replyTopic;
         }
@@ -42,6 +44,8 @@ namespace Wave
         public DateTime? DelayUntil { get; private set; }
 
         public Dictionary<string, string> Headers { get; private set; }
+
+        public Dictionary<string, string> Metadata { get; private set; }
 
         public Guid Id { get; private set; }
 

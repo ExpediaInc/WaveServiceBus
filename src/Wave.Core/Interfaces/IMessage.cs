@@ -13,16 +13,14 @@
 *  limitations under the License.
 */
 
+using System.Collections.Generic;
+
 namespace Wave
 {
-    public interface IBusClient
+    public interface IMessage<out T>
     {
-        void Publish(object message);
+        T Content { get; }
 
-        void Publish<T>(IMessage<T> message);
-
-        void Send(string route, object message);
-
-        void Send<T>(string route, IMessage<T> message);
+        IReadOnlyDictionary<string, string> Metadata { get; }
     }
 }
