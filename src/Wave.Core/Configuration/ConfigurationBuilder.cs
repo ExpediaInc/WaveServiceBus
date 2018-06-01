@@ -79,7 +79,9 @@ namespace Wave.Configuration
             // RegisterTypeOrDefault below can grab the configured type for each
             // component
             this.Populate(fluentConfig.BuildUpConfiguration(this));
+#if NET451
             this.Populate(new XMLConfigurationSource().BuildUpConfiguration(this));
+#endif
 
             // Register Concrete types that will be used
             this.Container.Register<PrimaryConsumer, PrimaryConsumer>(InstanceScope.Singleton);

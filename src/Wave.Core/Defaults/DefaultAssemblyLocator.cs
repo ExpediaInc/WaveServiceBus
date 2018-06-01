@@ -29,6 +29,7 @@ namespace Wave.Defaults
         {
             if (this.entryAssemblyCache == null)
             {
+#if NET451
                 // Hosted as a web application. As usual, there is no
                 // decent way to make this work, so walk the type tree until you hit
                 // the first non ASP (lol) class.
@@ -44,6 +45,7 @@ namespace Wave.Defaults
                     this.entryAssemblyCache = type == null ? Assembly.GetExecutingAssembly() : type.Assembly;
                 }
                 else
+#endif
                 {
                     // Console or Windows Service
                     this.entryAssemblyCache = Assembly.GetEntryAssembly();
