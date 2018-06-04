@@ -49,7 +49,17 @@ namespace Wave
             busClient.Value.Publish(message);
         }
 
+        public static void Publish<T>(IMessage<T> message)
+        {
+            busClient.Value.Publish(message);
+        }
+
         public static void Send(string route, object message)
+        {
+            busClient.Value.Send(route, message);
+        }
+
+        public static void Send<T>(string route, IMessage<T> message)
         {
             busClient.Value.Send(route, message);
         }

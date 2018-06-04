@@ -26,8 +26,6 @@ namespace Wave.Transports.RabbitMQ
 {    
     public class RabbitMQTransport : ITransport
     {
-        private const string MetadataHeaderPrefix = "Metadata_";
-
         private readonly RabbitConnectionManager connectionManager;        
         private readonly String delayQueueName;
         private readonly String errorQueueName;
@@ -204,11 +202,6 @@ namespace Wave.Transports.RabbitMQ
                 properties.Headers[pair.Key] = pair.Value;
             }
 
-            foreach (var pair in message.Metadata)
-            {
-                properties.Headers[MetadataHeaderPrefix + pair.Key] = pair.Value;
-            }
-
             return properties;
         }
 
@@ -251,15 +244,7 @@ namespace Wave.Transports.RabbitMQ
                         foreach (var header in rabbitMessage.BasicProperties.Headers)
                         {
                             var key = header.Key;
-                            if (key.StartsWith(MetadataHeaderPrefix))
-                            {
-                                key = key.Replace(MetadataHeaderPrefix, string.Empty);
-                                rawMessage.Metadata[key] = this.configuration.Serializer.Encoding.GetString((Byte[])header.Value);
-                            }
-                            else
-                            {
-                                rawMessage.Headers[key] = this.configuration.Serializer.Encoding.GetString((Byte[])header.Value);
-                            }
+                            rawMessage.Headers[key] = this.configuration.Serializer.Encoding.GetString((Byte[])header.Value);
                         }
 
                         // Callback and provide an accept and reject callback to the consumer                        

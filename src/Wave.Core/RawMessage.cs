@@ -27,7 +27,6 @@ namespace Wave
     public class RawMessage
     {
         private Dictionary<string, string> headers;
-        private Dictionary<string, string> metadata;
 
         public string Data { get; set; }
 
@@ -53,12 +52,6 @@ namespace Wave
         {
             get { return this.headers ?? (this.headers = new Dictionary<string, string>()); }
             set { this.headers = value; }
-        }
-
-        public Dictionary<string, string> Metadata
-        {
-            get { return this.metadata ?? (this.metadata = new Dictionary<string, string>()); }
-            set { this.metadata = value; }
         }
 
         public Guid Id { get; set; }
@@ -130,8 +123,21 @@ namespace Wave
         public static RawMessage Create<T>(IMessage<T> message)
         {
             var rawMessage = Create(message.Content);
-            rawMessage.metadata = message.Metadata
-                .ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
+
+            var existingHeaders = rawMessage.Headers;
+            var additionalHeaders = message.Headers
+                ?? Enumerable.Empty<KeyValuePair<string, string>>();
+
+            foreach (var header in additionalHeaders)
+            {
+                // TODO: Throw if trying to override built-in headers instead of silently ignoring?
+                //       Or do we allow overwriting?
+                var key = header.Key;
+                if (!existingHeaders.ContainsKey(key))
+                {
+                    existingHeaders.Add(key, header.Value);
+                }
+            }
 
             return rawMessage;
         }

@@ -143,16 +143,16 @@ namespace Wave.Tests
         }
 
         [Test]
-        public void Send_Puts_Message_With_Metada_In_Primary_Queue()
+        public void Send_Puts_Message_With_Custom_Header_In_Primary_Queue()
         {
-            const string MetadataKey = "TESTKEY";
-            const string MetadataValue = "TESTVALUE";
+            const string HeaderKey = "TESTKEY";
+            const string HeaderValue = "TESTVALUE";
 
             var transport = this.GetTransport();
             var testMessage = TestHelpers.GetRawMessage(new TestMessage(), new DefaultSerializer(), new DefaultSubscriptionKeyResolver());
             var returnedMessage = (RawMessage)null;
 
-            testMessage.Metadata = new Dictionary<string, string> { { MetadataKey, MetadataValue } };
+            testMessage.Headers[HeaderKey] = HeaderValue;
 
             transport.RegisterSubscription(typeof(TestMessage).Name);
             transport.Send(typeof(TestMessage).Name, testMessage);
@@ -169,8 +169,8 @@ namespace Wave.Tests
 
             Assert.IsNotNull(returnedMessage);
             Assert.AreEqual(testMessage.Id, returnedMessage.Id);
-            Assert.IsTrue(returnedMessage.Metadata.ContainsKey(MetadataKey));
-            Assert.AreEqual(MetadataValue, returnedMessage.Metadata[MetadataKey]);
+            Assert.IsTrue(returnedMessage.Headers.ContainsKey(HeaderKey));
+            Assert.AreEqual(HeaderValue, returnedMessage.Headers[HeaderKey]);
         }
 
         [Test]
@@ -259,13 +259,5 @@ namespace Wave.Tests
 
         [Serializable]
         protected class TestMessage { }
-        
-        [Serializable]
-        protected class TestMessageWithMetadata : IMessage<TestMessage>
-        {
-            public TestMessage Content { get; set; }
-
-            public IReadOnlyDictionary<string, string> Metadata { get; set; }
-        }
     }
 }

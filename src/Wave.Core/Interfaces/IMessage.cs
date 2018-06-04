@@ -21,6 +21,6 @@ namespace Wave
     {
         T Content { get; }
 
-        IReadOnlyDictionary<string, string> Metadata { get; }
+        IReadOnlyDictionary<string, string> Headers { get; }
     }
 }
