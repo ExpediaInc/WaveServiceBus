@@ -16,6 +16,7 @@
 using System;
 using System.Collections.Generic;
 using System.Configuration;
+using RabbitMQ.Client;
 
 namespace Wave.Transports.RabbitMQ.Configuration
 {
@@ -24,9 +25,13 @@ namespace Wave.Transports.RabbitMQ.Configuration
         private const ushort DefaultPrefetchCountPerWorker = 2;
         private const ushort DefaultDelayQueuePrefetchCount = 1800;
 
+        private static readonly Action<IBasicProperties, IDictionary<string, string>> DoNothingOnSend = (properties, metadata) => { };
+
         private bool autoDeleteQueues = false;
         private string connectionString = null;
         private string exchange = "Wave";
+
+        private Action<IBasicProperties, IDictionary<string, string>> onSendingMessageAction = DoNothingOnSend;
 
         // These are stored internally as ushort because that is what RabbitMQ requires.
         // They are exposed externally as int because this is a public class and I didn't
@@ -97,6 +102,14 @@ namespace Wave.Transports.RabbitMQ.Configuration
             }
         }
 
+        public Action<IBasicProperties, IDictionary<string, string>> OnSendingMessageAction
+        {
+            get
+            {
+                return this.onSendingMessageAction;
+            }
+        }
+
         public ConfigurationSettings UseAutoDeleteQueues()
         {
             this.autoDeleteQueues = true;
@@ -132,6 +145,12 @@ namespace Wave.Transports.RabbitMQ.Configuration
         public ConfigurationSettings WithPrimaryQueueArguments(IReadOnlyDictionary<string, object> arguments)
         {
             this.primaryQueueArguments = arguments;
+            return this;
+        }
+
+        public ConfigurationSettings WithOnSendingMessageAction(Action<IBasicProperties, IDictionary<string, string>> action)
+        {
+            this.onSendingMessageAction = action;
             return this;
         }
     }
