@@ -59,6 +59,7 @@
     <Compile Include="Interfaces\IConfigurationContext.cs" />
     <Compile Include="Consumers\DelayConsumer.cs" />
     <Compile Include="HandlerResults\IgnoreResult.cs" />
+    <Compile Include="Interfaces\IMessage.cs" />
     <Compile Include="Interfaces\IOutboundMessageFilter.cs" />
     <Compile Include="Interfaces\IQueueNameResolver.cs" />
     <Compile Include="Interfaces\ISubscriptionKeyResolver.cs" />

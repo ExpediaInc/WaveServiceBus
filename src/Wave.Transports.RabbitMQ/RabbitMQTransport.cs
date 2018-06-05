@@ -117,6 +117,11 @@ namespace Wave.Transports.RabbitMQ
             this.Send(subscription, RawMessage.Create(message));
         }
 
+        public void Send<T>(string subscription, IMessage<T> message)
+        {
+            this.Send(subscription, RawMessage.Create(message));
+        }
+
         public void Send(string subscription, RawMessage message)
         {
             if (this.sendChannel.Value.IsClosed)
@@ -238,7 +243,8 @@ namespace Wave.Transports.RabbitMQ
 
                         foreach (var header in rabbitMessage.BasicProperties.Headers)
                         {
-                            rawMessage.Headers[header.Key] = this.configuration.Serializer.Encoding.GetString((Byte[])header.Value);
+                            var key = header.Key;
+                            rawMessage.Headers[key] = this.configuration.Serializer.Encoding.GetString((Byte[])header.Value);
                         }
 
                         // Callback and provide an accept and reject callback to the consumer                        

@@ -106,6 +106,11 @@ namespace Wave.Transports.MSMQ
             this.Send(subscription, RawMessage.Create(message));
         }
 
+        public void Send<T>(string subscription, IMessage<T> message)
+        {
+            this.Send(subscription, RawMessage.Create(message));
+        }
+
         public void Send(string subscription, RawMessage message)
         {
             this.outboundQueue.Send(message);

@@ -80,7 +80,7 @@ namespace Wave.Consumers
                     message.DelayUntil,
                     message.RetryCount,
                     message.ReplyTopic,
-                    message.Headers,
+                    message.Headers
                 });
 
             // Invoke OnHandlerExecuting method on filters
