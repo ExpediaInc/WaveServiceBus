@@ -199,7 +199,6 @@ namespace Wave.Transports.RabbitMQ.Tests
                     r.UseConnectionString(connectionString);
                     r.UseExchange(exchange);
                     r.WithPrimaryQueueArguments(primaryQueueArguments);
-                    r.WithOnSendingMessageAction(OnSendingMessage);
                 });
             });
 
@@ -207,16 +206,6 @@ namespace Wave.Transports.RabbitMQ.Tests
             transport.InitializeForConsuming();
             transport.InitializeForPublishing();
             return transport;
-        }
-
-        private void OnSendingMessage(IBasicProperties properties, IDictionary<string, string> metadata)
-        {
-            byte priority;
-            string priorityValue;
-            if (metadata.TryGetValue(PriorityKey, out priorityValue) && byte.TryParse(priorityValue, out priority))
-            {
-                properties.Priority = priority;
-            }
         }
 
         private static void VerifyMessagePriority(RawMessage rawMessage, ushort expectedPriority)

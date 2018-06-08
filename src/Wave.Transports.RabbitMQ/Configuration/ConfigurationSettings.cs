@@ -25,13 +25,11 @@ namespace Wave.Transports.RabbitMQ.Configuration
         private const ushort DefaultPrefetchCountPerWorker = 2;
         private const ushort DefaultDelayQueuePrefetchCount = 1800;
 
-        private static readonly Action<IBasicProperties, IDictionary<string, string>> DoNothingOnSend = (properties, metadata) => { };
-
         private bool autoDeleteQueues = false;
         private string connectionString = null;
         private string exchange = "Wave";
 
-        private Action<IBasicProperties, IDictionary<string, string>> onSendingMessageAction = DoNothingOnSend;
+        private Action<IBasicProperties, IDictionary<string, string>> onSendingMessageAction = null;
 
         // These are stored internally as ushort because that is what RabbitMQ requires.
         // They are exposed externally as int because this is a public class and I didn't
@@ -127,7 +125,7 @@ namespace Wave.Transports.RabbitMQ.Configuration
             this.exchange = exchange;
             return this;
         }
-        
+
         // These take int arguments because I didn't want to break CLS compliance.
         // They convert to ushort immediately to fail as early as possible if invalid.
         public ConfigurationSettings WithPrefetchCountPerWorker(int prefetchCountPerWorker)

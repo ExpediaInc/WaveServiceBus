@@ -26,6 +26,8 @@ namespace Wave.Transports.RabbitMQ
 {    
     public class RabbitMQTransport : ITransport
     {
+        private const string PriorityKey = "Priority";
+
         private static readonly Action<IBasicProperties, IDictionary<string, string>> DoNothingOnSend = (properties, metadata) => { };
 
         private readonly RabbitConnectionManager connectionManager;        
@@ -214,6 +216,7 @@ namespace Wave.Transports.RabbitMQ
                 properties.Headers[pair.Key] = pair.Value;
             }
 
+            SetPropertiesFromHeaders(properties, messageHeaders);
             this.onSend(properties, messageHeaders);
 
             return properties;
@@ -319,6 +322,16 @@ namespace Wave.Transports.RabbitMQ
             }
 
             return context;
+        }
+        
+        private static void SetPropertiesFromHeaders(IBasicProperties properties, IDictionary<string, string> headers)
+        {
+            byte priority;
+            string priorityHeaderValue;
+            if (headers.TryGetValue(PriorityKey, out priorityHeaderValue) && byte.TryParse(priorityHeaderValue, out priority))
+            {
+                properties.Priority = priority;
+            }
         }
     }
 }
