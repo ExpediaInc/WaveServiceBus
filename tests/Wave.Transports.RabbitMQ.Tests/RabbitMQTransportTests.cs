@@ -199,7 +199,7 @@ namespace Wave.Transports.RabbitMQ.Tests
                     r.UseConnectionString(connectionString);
                     r.UseExchange(exchange);
                     r.WithPrimaryQueueArguments(primaryQueueArguments);
-                    r.WithOnSendingMessageAction(OnSendingMessage);
+                    r.OnSendingMessage(OnSendingMessage);
                 });
             });
 

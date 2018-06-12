@@ -25,13 +25,10 @@ namespace Wave.Transports.RabbitMQ.Configuration
         private const ushort DefaultPrefetchCountPerWorker = 2;
         private const ushort DefaultDelayQueuePrefetchCount = 1800;
 
-        private static readonly Action<IBasicProperties, IDictionary<string, string>> DoNothingOnSend = (properties, metadata) => { };
-
         private bool autoDeleteQueues = false;
         private string connectionString = null;
         private string exchange = "Wave";
 
-        private Action<IBasicProperties, IDictionary<string, string>> onSendingMessageAction = DoNothingOnSend;
 
         // These are stored internally as ushort because that is what RabbitMQ requires.
         // They are exposed externally as int because this is a public class and I didn't
@@ -39,6 +36,7 @@ namespace Wave.Transports.RabbitMQ.Configuration
         private ushort prefetchCountPerWorker = DefaultPrefetchCountPerWorker;
         private ushort delayQueuePrefetchCount = DefaultDelayQueuePrefetchCount;
         private IReadOnlyDictionary<string, object> primaryQueueArguments;
+        private Action<IBasicProperties, IDictionary<string, string>> onSendingMessageAction;
 
         public string ConnectionString 
         {
@@ -46,8 +44,7 @@ namespace Wave.Transports.RabbitMQ.Configuration
             {
                 if (connectionString == null)
                 {
-                    // If not set, check to see if a connection string for "RabbitMQ" 
-                    // is defined.
+                    // If not set, check to see if a connection string for "RabbitMQ" is defined.
                     if (ConfigurationManager.ConnectionStrings["RabbitMQ"] != null)
                     {
                         connectionString = ConfigurationManager.ConnectionStrings["RabbitMQ"].ConnectionString;
@@ -148,7 +145,7 @@ namespace Wave.Transports.RabbitMQ.Configuration
             return this;
         }
 
-        public ConfigurationSettings WithOnSendingMessageAction(Action<IBasicProperties, IDictionary<string, string>> action)
+        public ConfigurationSettings OnSendingMessage(Action<IBasicProperties, IDictionary<string, string>> action)
         {
             this.onSendingMessageAction = action;
             return this;
