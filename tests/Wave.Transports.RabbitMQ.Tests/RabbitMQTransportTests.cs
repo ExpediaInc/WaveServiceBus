@@ -17,7 +17,9 @@ using NUnit.Framework;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
+using RabbitMQ.Client;
 using Wave.Configuration;
 using Wave.Tests;
 using Wave.Tests.Internal;
@@ -35,6 +37,10 @@ namespace Wave.Transports.RabbitMQ.Tests
     {
         private const string connectionString = "amqp://guest:guest@localhost:5672/";
         private const string exchange = "Wave";
+        private const string PriorityKey = "Priority";
+
+        private static readonly Version priorityQueuesMinimumServerVersion = new Version(3, 5, 0);
+
         private ConcurrentBag<Guid> usedGuids = new ConcurrentBag<Guid>();
 
         public override ITransport GetTransport()
@@ -68,39 +74,6 @@ namespace Wave.Transports.RabbitMQ.Tests
             #endif
         }
 
-        // TODO: This just ensures that queue creation doesn't fail and send works normally.
-        //       When message-level manipulation is added, an end-to-end test will be added using priority,
-        //       that will test primary queue arguments at the same time.
-        [Test]
-        public void SendToPrimary_With_Valid_Primary_Queue_Arguments_Puts_Message_In_Primary_Queue()
-        {
-            IReadOnlyDictionary<string, object> validPrimaryQueueArguments = new Dictionary<string, object>
-            {
-                { "x-max-length", 10000 },
-                { "x-message-ttl", 86400000 }
-            };
-
-            var transport = this.GetTransport(validPrimaryQueueArguments);
-            var testMessage = new TestMessage();
-            var returnedMessage = (RawMessage)null;
-
-            transport.RegisterSubscription(typeof(TestMessage).Name);
-            transport.Send(typeof(TestMessage).Name, testMessage);
-
-            this.RunBlocking(unblockEvent =>
-            {
-                transport.GetMessages(new CancellationToken(),
-                    (message, ack, reject) =>
-                    {
-                        returnedMessage = message;
-                        ack();
-                        unblockEvent.Set();
-                    });
-            }, TimeSpan.FromSeconds(15));
-
-            Assert.IsNotNull(returnedMessage);
-        }
-
         [Test]
         public void Lets_Exception_Bubble_Out_If_Primary_Queue_Arguments_Are_Invalid()
         {
@@ -122,7 +95,96 @@ namespace Wave.Transports.RabbitMQ.Tests
             Assert.Fail("Exception did not bubble out for invalid primary queue argument.");
         }
 
-        private ITransport GetTransport(IReadOnlyDictionary<string, object> primaryQueueArguments)
+
+        [Test]
+        public void Send_Puts_Message_With_Priority_In_Front_Of_Primary_Queue()
+        {
+            IReadOnlyDictionary<string, object> primaryQueueArguments = new Dictionary<string, object>
+            {
+                { "x-max-priority", 2 }
+            };
+
+            var transport = this.GetTransport(primaryQueueArguments);
+            if (transport.ServerVersion < priorityQueuesMinimumServerVersion)
+            {
+                Assert.Inconclusive("Priority queues are only supported on version {0} and higher.", priorityQueuesMinimumServerVersion);
+            }
+
+            var lowPriorityMessage = new PriorityTestMessage(priority: 0);
+            var mediumPriorityMessage = new PriorityTestMessage(priority: 1);
+            var highPriorityMessage = new PriorityTestMessage(priority: 2);
+            var messagesReturned = new List<RawMessage>();
+
+            transport.RegisterSubscription(typeof(TestMessage).Name);
+
+            transport.Send(typeof(TestMessage).Name, lowPriorityMessage);
+            transport.Send(typeof(TestMessage).Name, mediumPriorityMessage);
+            transport.Send(typeof(TestMessage).Name, highPriorityMessage);
+
+            this.RunBlocking((unblockEvent) =>
+            {
+                transport.GetMessages(new CancellationToken(),
+                    (message, ack, reject) =>
+                    {
+                        messagesReturned.Add(message);
+                        ack();
+                        if (messagesReturned.Count == 3)
+                        {
+                            unblockEvent.Set();
+                        }
+                    });
+            }, TimeSpan.FromSeconds(15));
+
+            Assert.AreEqual(3, messagesReturned.Count);
+            VerifyMessagePriority(messagesReturned.First(), highPriorityMessage.Priority);
+            VerifyMessagePriority(messagesReturned.Last(), lowPriorityMessage.Priority);
+        }
+
+        [Test]
+        public void Send_Does_Not_Put_Message_With_Priority_In_Front_Of_Primary_Queue_When_MaxPriority_Is_Not_Set()
+        {
+            IReadOnlyDictionary<string, object> primaryQueueArguments = new Dictionary<string, object>
+            {
+                { "x-max-priority", 0 }
+            };
+
+            var transport = this.GetTransport(primaryQueueArguments);
+            if (transport.ServerVersion < priorityQueuesMinimumServerVersion)
+            {
+                Assert.Inconclusive("Priority queues are only supported on version {0} and higher.", priorityQueuesMinimumServerVersion);
+            }
+
+            var lowPriorityMessage = new PriorityTestMessage(priority: 0);
+            var mediumPriorityMessage = new PriorityTestMessage(priority: 1);
+            var highPriorityMessage = new PriorityTestMessage(priority: 2);
+            var messagesReturned = new List<RawMessage>();
+
+            transport.RegisterSubscription(typeof(TestMessage).Name);
+
+            transport.Send(typeof(TestMessage).Name, lowPriorityMessage);
+            transport.Send(typeof(TestMessage).Name, mediumPriorityMessage);
+            transport.Send(typeof(TestMessage).Name, highPriorityMessage);
+
+            this.RunBlocking((unblockEvent) =>
+            {
+                transport.GetMessages(new CancellationToken(),
+                    (message, ack, reject) =>
+                    {
+                        messagesReturned.Add(message);
+                        ack();
+                        if (messagesReturned.Count == 3)
+                        {
+                            unblockEvent.Set();
+                        }
+                    });
+            }, TimeSpan.FromSeconds(15));
+
+            Assert.AreEqual(3, messagesReturned.Count);
+            VerifyMessagePriority(messagesReturned.First(), lowPriorityMessage.Priority);
+            VerifyMessagePriority(messagesReturned.Last(), highPriorityMessage.Priority);
+        }
+
+        private RabbitMQTransport GetTransport(IReadOnlyDictionary<string, object> primaryQueueArguments)
         {
             // Each Transport uses a unique Guid as the queue base to ensure the tests are isolated            
             var transportGuid = Guid.NewGuid();
@@ -137,6 +199,7 @@ namespace Wave.Transports.RabbitMQ.Tests
                     r.UseConnectionString(connectionString);
                     r.UseExchange(exchange);
                     r.WithPrimaryQueueArguments(primaryQueueArguments);
+                    r.OnSendingMessage(OnSendingMessage);
                 });
             });
 
@@ -144,6 +207,46 @@ namespace Wave.Transports.RabbitMQ.Tests
             transport.InitializeForConsuming();
             transport.InitializeForPublishing();
             return transport;
+        }
+
+        private void OnSendingMessage(IBasicProperties properties, IDictionary<string, string> metadata)
+        {
+            byte priority;
+            string priorityValue;
+            if (metadata.TryGetValue(PriorityKey, out priorityValue) && byte.TryParse(priorityValue, out priority))
+            {
+                properties.Priority = priority;
+            }
+        }
+
+        private static void VerifyMessagePriority(RawMessage rawMessage, ushort expectedPriority)
+        {
+            string priorityHeader;
+            Assert.IsTrue(rawMessage.Headers.TryGetValue(PriorityKey, out priorityHeader));
+
+            byte actualPriority;
+            Assert.IsTrue(byte.TryParse(priorityHeader, out actualPriority));
+
+            Assert.AreEqual(expectedPriority, actualPriority);
+        }
+
+        private class PriorityTestMessage : IMessage<TestMessage>
+        {
+            public PriorityTestMessage(ushort priority)
+            {
+                Priority = priority;
+                Content = new TestMessage();
+                Headers = new Dictionary<string, string>
+                {
+                    { PriorityKey, priority.ToString() }
+                };
+            }
+
+            public ushort Priority { get; }
+
+            public TestMessage Content { get; }
+
+            public IReadOnlyDictionary<string, string> Headers { get; }
         }
     }
 }

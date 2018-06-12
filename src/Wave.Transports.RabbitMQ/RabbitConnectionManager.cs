@@ -15,6 +15,7 @@
 
 using RabbitMQ.Client;
 using System;
+using System.Linq;
 
 namespace Wave.Transports.RabbitMQ
 {
@@ -30,6 +31,17 @@ namespace Wave.Transports.RabbitMQ
         {
             this.connectionString = connectionString;
             this.ResetConnection();
+        }
+
+        internal Version ServerVersion
+        {
+            get
+            {
+                Version version;
+                return Version.TryParse(GetServerPropertyAsString("version"), out version)
+                    ? version
+                    : new Version(); // 0.0
+            }
         }
 
         internal IModel GetChannel()
@@ -84,5 +96,22 @@ namespace Wave.Transports.RabbitMQ
             // If the connection is aborted, reinit the lazy connection so that next access will reconnect.
             this.ResetConnection();
         }
+
+        private string GetServerPropertyAsString(string name)
+        {
+            var serverPropertyChars = GetServerPropertyAsBytes(name)
+                .Select(Convert.ToChar);
+            return new string(serverPropertyChars.ToArray());
+        }
+
+        private byte[] GetServerPropertyAsBytes(string name)
+        {
+            object serverProperty;
+            return this.connection.Value.ServerProperties
+                .TryGetValue(name, out serverProperty)
+                ? (byte[])serverProperty
+                : Enumerable.Empty<byte>().ToArray();
+        }
+
     }
 }

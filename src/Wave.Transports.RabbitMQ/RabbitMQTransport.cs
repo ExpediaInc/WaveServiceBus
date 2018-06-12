@@ -26,6 +26,8 @@ namespace Wave.Transports.RabbitMQ
 {    
     public class RabbitMQTransport : ITransport
     {
+        private static readonly Action<IBasicProperties, IDictionary<string, string>> DoNothingOnSend = (properties, metadata) => { };
+
         private readonly RabbitConnectionManager connectionManager;        
         private readonly String delayQueueName;
         private readonly String errorQueueName;
@@ -35,6 +37,8 @@ namespace Wave.Transports.RabbitMQ
         private readonly Lazy<string> encodingName;
 
         private readonly ThreadLocal<IModel> sendChannel;
+
+        private readonly Action<IBasicProperties, IDictionary<string, string>> onSend;
  
         public RabbitMQTransport(IConfigurationContext configuration)
             : this(configuration.QueueNameResolver.GetPrimaryQueueName(), configuration)
@@ -56,6 +60,8 @@ namespace Wave.Transports.RabbitMQ
             this.DeclareExchange();
 
             this.sendChannel = new ThreadLocal<IModel>(() => this.connectionManager.GetChannel(), true);
+
+            this.onSend = this.configuration.GetOnSendingMessageAction() ?? DoNothingOnSend;
         }
 
         public void GetDelayMessages(CancellationToken token, Action<RawMessage, Action, Action> onMessageReceived)
@@ -177,6 +183,11 @@ namespace Wave.Transports.RabbitMQ
             this.connectionManager.Shutdown();
         }
 
+        internal Version ServerVersion
+        {
+            get { return this.connectionManager.ServerVersion; }
+        }
+
         private void DeclareExchange()
         {
             using (var channel = this.connectionManager.GetChannel())
@@ -197,10 +208,13 @@ namespace Wave.Transports.RabbitMQ
             properties.Timestamp = new AmqpTimestamp((long)(DateTime.UtcNow - new DateTime(1970, 1, 1, 0, 0, 0)).TotalSeconds);
             properties.Headers = new Dictionary<String,Object>();
 
-            foreach (var pair in message.Headers)
+            var messageHeaders = message.Headers;
+            foreach (var pair in messageHeaders)
             {
                 properties.Headers[pair.Key] = pair.Value;
             }
+
+            this.onSend(properties, messageHeaders);
 
             return properties;
         }
