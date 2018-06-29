@@ -22,7 +22,7 @@ namespace Wave.Logging.Log4Net
 
         public Log4NetLogger(IConfigurationContext configuration)
         {
-#if NET451
+#if NETFRAMEWORK
             internalLogger = LogManager.GetLogger(configuration.AssemblyLocator.GetEntryAssembly().GetName().Name);
 #else
             internalLogger = LogManager.GetLogger(configuration.AssemblyLocator.GetEntryAssembly().EntryPoint.DeclaringType);

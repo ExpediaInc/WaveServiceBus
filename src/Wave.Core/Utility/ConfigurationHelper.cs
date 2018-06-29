@@ -27,7 +27,7 @@ namespace Wave.Utility
         public static T GetConfigSection<T>()
         {
             System.Configuration.Configuration config = null;
-#if NET451
+#if NETFRAMEWORK
             if (System.Web.HttpContext.Current != null)
             {
                 config = System.Web.Configuration.WebConfigurationManager.OpenWebConfiguration("~");

@@ -13,7 +13,7 @@
 *  limitations under the License.
 */
 
-#if NET451
+#if NETFRAMEWORK
 using Microsoft.Practices.Unity;
 #else
 using Unity;

@@ -13,7 +13,7 @@
 *  limitations under the License.
 */
 
-#if NET451
+#if NETFRAMEWORK
 using System;
 using System.Collections.Generic;
 using System.Configuration;

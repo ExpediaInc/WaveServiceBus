@@ -79,7 +79,7 @@ namespace Wave.Configuration
             // RegisterTypeOrDefault below can grab the configured type for each
             // component
             this.Populate(fluentConfig.BuildUpConfiguration(this));
-#if NET451
+#if NETFRAMEWORK
             this.Populate(new XMLConfigurationSource().BuildUpConfiguration(this));
 #endif
 
