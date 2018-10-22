@@ -152,13 +152,14 @@ namespace Wave.Consumers
         /// <returns></returns>
         private IHandlerResult PerformHandler(Type messageType, object messageEnvelope, int currentRetryCount)
         {
+            const string LogMessageFormat = "Unhandled exception in handler: {0}";
+
             try
             {
                 return this.subscriptions[messageType].Invoke(messageEnvelope);
             }
             catch (TargetInvocationException ex)
             {
-                const string LogMessageFormat = "Unhandled exception in handler: {0}";
                 if (RetryResult.WillRetry(currentRetryCount))
                 {
                     // log a warning for retriable messages, since the error may just be transient
@@ -166,10 +167,15 @@ namespace Wave.Consumers
                 }
                 else
                 {
-                    this.configuration.Logger.ErrorFormat(LogMessageFormat, ex.InnerException.ToString());                    
+                    this.configuration.Logger.ErrorFormat(LogMessageFormat, ex.InnerException.ToString());
                 }
 
                 return new RetryResult(ex.InnerException.ToString());
+            }
+            catch (Exception ex)
+            {
+                this.configuration.Logger.ErrorFormat(LogMessageFormat, ex.ToString());
+                throw;
             }
         }
     }
