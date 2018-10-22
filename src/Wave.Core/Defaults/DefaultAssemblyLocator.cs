@@ -29,7 +29,7 @@ namespace Wave.Defaults
         {
             if (this.entryAssemblyCache == null)
             {
-#if NETFRAMEWORK
+#if NET451 || NET472
                 // Hosted as a web application. As usual, there is no
                 // decent way to make this work, so walk the type tree until you hit
                 // the first non ASP (lol) class.

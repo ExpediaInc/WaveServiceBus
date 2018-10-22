@@ -1,9 +1,15 @@
-﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFrameworks>net451;net472;netstandard2.0</TargetFrameworks>
     <OutputType>Library</OutputType>
+    <Product>Wave Service Bus</Product>
+    <Description>Integrates the Unity IoC framework into Wave Service Bus.</Description>
     <Company>Expedia</Company>
+    <Authors>Expedia</Authors>
+    <Copyright>Copyright © Expedia, Inc. 2018</Copyright>
+    <RootNamespace>Wave.IoC.Unity</RootNamespace>
+    <AssemblyName>Wave.IoC.Unity</AssemblyName>
   </PropertyGroup>
 
   <ItemGroup Condition=" '$(TargetFramework)' == 'net451' Or '$(TargetFramework)' == 'net472' ">

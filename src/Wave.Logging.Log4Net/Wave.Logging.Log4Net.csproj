@@ -1,9 +1,15 @@
-﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFrameworks>net451;net472;netstandard2.0</TargetFrameworks>
     <OutputType>Library</OutputType>
+    <Product>Wave Service Bus</Product>
+    <Description>Integrates the Log4Net logging framework into Wave Service Bus.</Description>
     <Company>Expedia</Company>
+    <Authors>Expedia</Authors>
+    <Copyright>Copyright © Expedia, Inc. 2018</Copyright>
+    <RootNamespace>Wave.Logging.Log4Net</RootNamespace>
+    <AssemblyName>Wave.Logging.Log4Net</AssemblyName>
   </PropertyGroup>
 
   <ItemGroup Condition=" '$(TargetFramework)' == 'net451' Or '$(TargetFramework)' == 'net472' ">

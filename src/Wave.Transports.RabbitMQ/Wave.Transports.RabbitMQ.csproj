@@ -1,12 +1,18 @@
-﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>net451;netstandard2.0</TargetFrameworks>
+    <TargetFrameworks>net451;net472;netstandard2.0</TargetFrameworks>
     <OutputType>Library</OutputType>
+    <Product>Wave Service Bus</Product>
+    <Description>RabbitMQ transport for Wave Service Bus.</Description>
     <Company>Expedia</Company>
+    <Authors>Expedia</Authors>
+    <Copyright>Copyright © Expedia, Inc. 2018</Copyright>
+    <RootNamespace>Wave.Transports.RabbitMQ</RootNamespace>
+    <AssemblyName>Wave.Transports.RabbitMQ</AssemblyName>
   </PropertyGroup>
 
-  <ItemGroup Condition=" '$(TargetFramework)' == 'net451' ">
+  <ItemGroup Condition=" '$(TargetFramework)' == 'net451' Or '$(TargetFramework)' == 'net472' ">
     <Reference Include="System" />
     <Reference Include="System.Configuration" />
     <Reference Include="System.Core" />
