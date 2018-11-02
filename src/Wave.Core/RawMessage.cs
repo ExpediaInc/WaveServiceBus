@@ -15,6 +15,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Wave.Configuration;
 
 namespace Wave
@@ -117,6 +118,28 @@ namespace Wave
                 Type = ConfigurationContext.Current.SubscriptionKeyResolver.GetKey(message.GetType()),
                 ReplyTopic = ConfigurationContext.Current.QueueNameResolver.GetPrimaryQueueName()
             };
+        }
+
+        public static RawMessage Create<T>(IMessage<T> message)
+        {
+            var rawMessage = Create(message.Content);
+
+            var existingHeaders = rawMessage.Headers;
+            var additionalHeaders = message.Headers
+                ?? Enumerable.Empty<KeyValuePair<string, string>>();
+
+            foreach (var header in additionalHeaders)
+            {
+                // TODO: Throw if trying to override built-in headers instead of silently ignoring?
+                //       Or do we allow overwriting?
+                var key = header.Key;
+                if (!existingHeaders.ContainsKey(key))
+                {
+                    existingHeaders.Add(key, header.Value);
+                }
+            }
+
+            return rawMessage;
         }
 
         public override string ToString()

@@ -41,6 +41,7 @@ namespace Wave
                 context.SetPrefetchCountPerWorker(Convert.ToUInt16(settings.PrefetchCountPerWorker));
                 context.SetDelayQueuePrefetchCount(Convert.ToUInt16(settings.DelayQueuePrefetchCount));
                 context.SetPrimaryQueueArguments(settings.PrimaryQueueArguments);
+                context.SetOnSendingMessageAction(settings.OnSendingMessageAction);
             });
         }
     }

@@ -16,6 +16,7 @@
 using System;
 using System.Collections.Generic;
 using System.Configuration;
+using RabbitMQ.Client;
 
 namespace Wave.Transports.RabbitMQ.Configuration
 {
@@ -28,12 +29,14 @@ namespace Wave.Transports.RabbitMQ.Configuration
         private string connectionString = null;
         private string exchange = "Wave";
 
+
         // These are stored internally as ushort because that is what RabbitMQ requires.
         // They are exposed externally as int because this is a public class and I didn't
         // want to break CLS compliance without permission.
         private ushort prefetchCountPerWorker = DefaultPrefetchCountPerWorker;
         private ushort delayQueuePrefetchCount = DefaultDelayQueuePrefetchCount;
         private IReadOnlyDictionary<string, object> primaryQueueArguments;
+        private Action<IBasicProperties, IDictionary<string, string>> onSendingMessageAction;
 
         public string ConnectionString 
         {
@@ -41,8 +44,7 @@ namespace Wave.Transports.RabbitMQ.Configuration
             {
                 if (connectionString == null)
                 {
-                    // If not set, check to see if a connection string for "RabbitMQ" 
-                    // is defined.
+                    // If not set, check to see if a connection string for "RabbitMQ" is defined.
                     if (ConfigurationManager.ConnectionStrings["RabbitMQ"] != null)
                     {
                         connectionString = ConfigurationManager.ConnectionStrings["RabbitMQ"].ConnectionString;
@@ -97,6 +99,14 @@ namespace Wave.Transports.RabbitMQ.Configuration
             }
         }
 
+        public Action<IBasicProperties, IDictionary<string, string>> OnSendingMessageAction
+        {
+            get
+            {
+                return this.onSendingMessageAction;
+            }
+        }
+
         public ConfigurationSettings UseAutoDeleteQueues()
         {
             this.autoDeleteQueues = true;
@@ -132,6 +142,12 @@ namespace Wave.Transports.RabbitMQ.Configuration
         public ConfigurationSettings WithPrimaryQueueArguments(IReadOnlyDictionary<string, object> arguments)
         {
             this.primaryQueueArguments = arguments;
+            return this;
+        }
+
+        public ConfigurationSettings OnSendingMessage(Action<IBasicProperties, IDictionary<string, string>> action)
+        {
+            this.onSendingMessageAction = action;
             return this;
         }
     }

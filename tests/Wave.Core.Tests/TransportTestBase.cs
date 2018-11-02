@@ -15,6 +15,7 @@
 
 using NUnit.Framework;
 using System;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using Wave.Defaults;
@@ -142,6 +143,37 @@ namespace Wave.Tests
         }
 
         [Test]
+        public void Send_Puts_Message_With_Custom_Header_In_Primary_Queue()
+        {
+            const string HeaderKey = "TESTKEY";
+            const string HeaderValue = "TESTVALUE";
+
+            var transport = this.GetTransport();
+            var testMessage = TestHelpers.GetRawMessage(new TestMessage(), new DefaultSerializer(), new DefaultSubscriptionKeyResolver());
+            var returnedMessage = (RawMessage)null;
+
+            testMessage.Headers[HeaderKey] = HeaderValue;
+
+            transport.RegisterSubscription(typeof(TestMessage).Name);
+            transport.Send(typeof(TestMessage).Name, testMessage);
+            this.RunBlocking((unblockEvent) =>
+            {
+                transport.GetMessages(new CancellationToken(),
+                    (message, ack, reject) =>
+                    {
+                        returnedMessage = message;
+                        ack();
+                        unblockEvent.Set();
+                    });
+            }, TimeSpan.FromSeconds(15));
+
+            Assert.IsNotNull(returnedMessage);
+            Assert.AreEqual(testMessage.Id, returnedMessage.Id);
+            Assert.IsTrue(returnedMessage.Headers.ContainsKey(HeaderKey));
+            Assert.AreEqual(HeaderValue, returnedMessage.Headers[HeaderKey]);
+        }
+
+        [Test]
         public void SendToDelay_Puts_Message_In_Delay_Queue()
         {
             var transport = this.GetTransport();
@@ -226,6 +258,6 @@ namespace Wave.Tests
         }
 
         [Serializable]
-        protected class TestMessage { }       
+        protected class TestMessage { }
     }
 }

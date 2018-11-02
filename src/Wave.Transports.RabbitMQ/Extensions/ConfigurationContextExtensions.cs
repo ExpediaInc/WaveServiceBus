@@ -13,7 +13,9 @@
 *  limitations under the License.
 */
 
+using System;
 using System.Collections.Generic;
+using RabbitMQ.Client;
 
 namespace Wave.Transports.RabbitMQ.Extensions
 {
@@ -80,9 +82,21 @@ namespace Wave.Transports.RabbitMQ.Extensions
             return context["rabbitmq.primaryQueueArguments"] as IDictionary<string, object>;
         }
 
-        internal static void SetPrimaryQueueArguments(this IConfigurationContext context, IReadOnlyDictionary<string, object> primaryQueueArguments)
+        internal static void SetPrimaryQueueArguments(
+            this IConfigurationContext context,
+            IReadOnlyDictionary<string, object> primaryQueueArguments)
         {
             context["rabbitmq.primaryQueueArguments"] = primaryQueueArguments;
+        }
+
+        internal static Action<IBasicProperties, IDictionary<string, string>> GetOnSendingMessageAction(this IConfigurationContext context)
+        {
+            return context["rabbitmq.onSendingMessage"] as Action<IBasicProperties, IDictionary<string, string>>;
+        }
+
+        internal static void SetOnSendingMessageAction(this IConfigurationContext context, Action<IBasicProperties, IDictionary<string, string>> onSendingMessageAction)
+        {
+            context["rabbitmq.onSendingMessage"] = onSendingMessageAction;
         }
     }
 }
