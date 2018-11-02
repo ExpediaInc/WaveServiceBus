@@ -152,7 +152,6 @@ namespace Wave.Consumers
         /// <returns></returns>
         private IHandlerResult PerformHandler(Type messageType, object messageEnvelope, int currentRetryCount)
         {
-            const string LogMessageFormat = "Unhandled exception in handler: {0}";
 
             try
             {
@@ -160,10 +159,13 @@ namespace Wave.Consumers
             }
             catch (Exception exceptionThrown)
             {
+                const string LogMessageFormat = "Unhandled exception in handler: {0}";
+
                 var exceptionToHandle = exceptionThrown is TargetInvocationException && exceptionThrown.InnerException != null
                     ? exceptionThrown.InnerException
                     : exceptionThrown;
                 string exceptionMessage = exceptionToHandle.ToString();
+
                 if (RetryResult.WillRetry(currentRetryCount))
                 {
                     // log a warning for retriable messages, since the error may just be transient
