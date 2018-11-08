@@ -22,7 +22,11 @@ namespace Wave.Logging.Log4Net
 
         public Log4NetLogger(IConfigurationContext configuration)
         {
+#if NET451 || NET472
             internalLogger = LogManager.GetLogger(configuration.AssemblyLocator.GetEntryAssembly().GetName().Name);
+#else
+            internalLogger = LogManager.GetLogger(configuration.AssemblyLocator.GetEntryAssembly().EntryPoint.DeclaringType);
+#endif
         }
 
         public bool IsDebugEnabled

@@ -13,6 +13,7 @@
 *  limitations under the License.
 */
 
+#if NET451 || NET472
 using System.Collections.Generic;
 using System.Configuration;
 
@@ -203,3 +204,4 @@ namespace Wave.Configuration
         }
     }
 }
+#endif

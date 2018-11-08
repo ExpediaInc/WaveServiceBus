@@ -27,11 +27,13 @@ namespace Wave.Utility
         public static T GetConfigSection<T>()
         {
             System.Configuration.Configuration config = null;
+#if NET451 || NET472
             if (System.Web.HttpContext.Current != null)
             {
                 config = System.Web.Configuration.WebConfigurationManager.OpenWebConfiguration("~");
             }
             else
+#endif
             {
                 config = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.None);
             }

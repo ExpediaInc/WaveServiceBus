@@ -12,7 +12,11 @@
 *  See the License for the specific language governing permissions and
 *  limitations under the License.
 */
+#if NET451 || NET472
 using Microsoft.Practices.Unity;
+#else
+using Unity;
+#endif
 using Wave.Configuration;
 using Wave.IoC.Unity;
 

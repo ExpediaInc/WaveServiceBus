@@ -152,24 +152,31 @@ namespace Wave.Consumers
         /// <returns></returns>
         private IHandlerResult PerformHandler(Type messageType, object messageEnvelope, int currentRetryCount)
         {
+
             try
             {
                 return this.subscriptions[messageType].Invoke(messageEnvelope);
             }
-            catch (TargetInvocationException ex)
+            catch (Exception exceptionThrown)
             {
                 const string LogMessageFormat = "Unhandled exception in handler: {0}";
+
+                var exceptionToHandle = exceptionThrown is TargetInvocationException && exceptionThrown.InnerException != null
+                    ? exceptionThrown.InnerException
+                    : exceptionThrown;
+                string exceptionMessage = exceptionToHandle.ToString();
+
                 if (RetryResult.WillRetry(currentRetryCount))
                 {
                     // log a warning for retriable messages, since the error may just be transient
-                    this.configuration.Logger.WarnFormat(LogMessageFormat, ex.InnerException.ToString());
+                    this.configuration.Logger.WarnFormat(LogMessageFormat, exceptionMessage);
                 }
                 else
                 {
-                    this.configuration.Logger.ErrorFormat(LogMessageFormat, ex.InnerException.ToString());                    
+                    this.configuration.Logger.ErrorFormat(LogMessageFormat, exceptionMessage);
                 }
 
-                return new RetryResult(ex.InnerException.ToString());
+                return new RetryResult(exceptionMessage);
             }
         }
     }
