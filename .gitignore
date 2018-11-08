@@ -109,7 +109,7 @@ Backup*/
 UpgradeLog*.XML
 
 # Nuget Packages
-packages/
+src/packages/
 
 # Sonar
 .sonar/
