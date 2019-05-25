@@ -55,6 +55,14 @@ namespace Wave.IoC.Unity
 
         public void Register(Type from, Type to, InstanceScope scope)
         {
+            // TODO: This validation isn't happening in the Unity framework for some reason, on any platform.
+            //       Temporarily copying validation from .NET Core version until I figure out why.
+            if (from != null && !from.IsGenericType && !to.IsGenericType &&
+                !from.IsAssignableFrom(to))
+            {
+                throw new ArgumentException($"The type {to} cannot be assigned to variables of type {from}.");
+            }
+
             if (scope == InstanceScope.Singleton)
             {
                 this.container.RegisterType(from, to, new ContainerControlledLifetimeManager());

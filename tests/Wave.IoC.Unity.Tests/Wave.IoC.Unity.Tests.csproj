@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>net451</TargetFrameworks>
+    <TargetFrameworks>net451;net472</TargetFrameworks>
     <OutputType>Library</OutputType>
     <RootNamespace>Wave.IoC.Unity.Tests</RootNamespace>
     <AssemblyName>Wave.IoC.Unity.Tests</AssemblyName>
