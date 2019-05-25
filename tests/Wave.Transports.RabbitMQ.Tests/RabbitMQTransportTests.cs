@@ -56,7 +56,7 @@ namespace Wave.Transports.RabbitMQ.Tests
             #endif
         }
 
-        [TestFixtureTearDown]
+        [OneTimeTearDown]
         public void TearDown()
         {
             #if INTEGRATION

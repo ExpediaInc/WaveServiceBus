@@ -13,12 +13,8 @@
 *  limitations under the License.
 */
 
-#if NET451 || NET472
-using Microsoft.Practices.Unity;
-#else
 using Unity;
 using Unity.Lifetime;
-#endif
 using System;
 using System.Collections.Generic;
 using System.Linq;

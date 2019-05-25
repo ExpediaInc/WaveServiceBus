@@ -18,8 +18,8 @@ using Wave.Defaults;
 
 namespace Wave.Tests.Internal
 {
-    [Category("Container: All")]
     [TestFixture]
+    [Category("Container: All")]
     [Ignore("Ignore Tests on Container Base")]
     public class ContainerTestBase
     {

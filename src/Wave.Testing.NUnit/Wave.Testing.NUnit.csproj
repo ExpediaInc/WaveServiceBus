@@ -23,7 +23,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="NUnit" Version="2.6.3" />
+    <PackageReference Include="NUnit" Version="3.10.1" />
     <ProjectReference Include="..\Wave.Core\Wave.Core.csproj" />
   </ItemGroup>
 
