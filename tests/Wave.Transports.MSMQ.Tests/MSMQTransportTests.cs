@@ -66,7 +66,7 @@ namespace Wave.Transports.MSMQ.Tests
             #endif
         }
 
-        [TestFixtureTearDown]
+        [OneTimeTearDown]
         public void TearDown()
         {
             #if INTEGRATION

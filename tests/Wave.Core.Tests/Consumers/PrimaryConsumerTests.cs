@@ -139,18 +139,20 @@ namespace Wave.Tests.Consumers
         [Test]
         public void Message_Filters_Can_Be_Chained()
         {
+            int filterCounter = 0;
+
             var builder = new ConfigurationBuilder();
             builder.ConfigureAndCreateContext(x =>
             {
                 x.UsingAssemblyLocator<TestAssemblyLocator>();
-                x.WithInboundMessageFilter<AlwaysSuccessMessage>(new ChainedFilterOne());
-                x.WithInboundMessageFilter<AlwaysSuccessMessage>(new ChainedFilterTwo());
+                x.WithInboundMessageFilter<AlwaysSuccessMessage>(new ChainedFilterOne(() => filterCounter++));
+                x.WithInboundMessageFilter<AlwaysSuccessMessage>(new ChainedFilterTwo(() => filterCounter++));
             });
             
             var result = DispatchMessage(new AlwaysSuccessMessage(), builder);
 
             // Two Asserts should be ran in the chained filters
-            Assert.That(Assert.Counter == 2);
+            Assert.That(filterCounter == 2);
         }           
     }
 }

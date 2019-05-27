@@ -105,9 +105,16 @@ namespace Wave.Tests
 
     public class ChainedFilterOne : Attribute, IInboundMessageFilter
     {
+        private readonly Action onExecuting;
+
+        public ChainedFilterOne(Action onExecuting)
+        {
+            this.onExecuting = onExecuting;
+        }
+
         public IHandlerResult OnHandlerExecuting(Type messageType, object message)
         {
-            Assert.True(true);
+            onExecuting();
             return this.Success();
         }
 
@@ -119,9 +126,16 @@ namespace Wave.Tests
 
     public class ChainedFilterTwo : Attribute, IInboundMessageFilter
     {
+        private readonly Action onExecuting;
+
+        public ChainedFilterTwo(Action onExecuting)
+        {
+            this.onExecuting = onExecuting;
+        }
+
         public IHandlerResult OnHandlerExecuting(Type messageType, object message)
         {
-            Assert.True(true);
+            onExecuting();
             return this.Success();
         }
 

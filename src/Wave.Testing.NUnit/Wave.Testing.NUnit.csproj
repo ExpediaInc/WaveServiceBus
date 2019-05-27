@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>net451;net472</TargetFrameworks>
+    <TargetFrameworks>net451;net472;netstandard2.0</TargetFrameworks>
     <OutputType>Library</OutputType>
     <Product>Wave Service Bus</Product>
     <Description>Use if you are testing your Wave Service Bus services with NUnit.</Description>
@@ -12,18 +12,13 @@
     <AssemblyName>Wave.Testing.NUnit</AssemblyName>
   </PropertyGroup>
 
-  <ItemGroup>
+  <ItemGroup Condition=" '$(TargetFramework)' == 'net451' Or '$(TargetFramework)' == 'net472' ">
     <Reference Include="System" />
     <Reference Include="System.Core" />
-    <Reference Include="System.Xml.Linq" />
-    <Reference Include="System.Data.DataSetExtensions" />
-    <Reference Include="Microsoft.CSharp" />
-    <Reference Include="System.Data" />
-    <Reference Include="System.Xml" />
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="NUnit" Version="2.6.3" />
+    <PackageReference Include="NUnit" Version="3.9.0" />
     <ProjectReference Include="..\Wave.Core\Wave.Core.csproj" />
   </ItemGroup>
 

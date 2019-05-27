@@ -13,7 +13,7 @@
 *  limitations under the License.
 */
 
-using Microsoft.Practices.Unity;
+using Unity;
 using NUnit.Framework;
 using Wave.Configuration;
 using Wave.Tests.Internal;
