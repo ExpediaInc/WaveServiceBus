@@ -18,7 +18,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="NUnit" Version="3.10.1" />
+    <PackageReference Include="NUnit" Version="3.9.0" />
     <ProjectReference Include="..\Wave.Core\Wave.Core.csproj" />
   </ItemGroup>
 

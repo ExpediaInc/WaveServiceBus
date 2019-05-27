@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>net451;net472</TargetFrameworks>
+    <TargetFrameworks>net451;net472;netcoreapp2.1</TargetFrameworks>
     <OutputType>Library</OutputType>
     <RootNamespace>Wave.IoC.Unity.Tests</RootNamespace>
     <AssemblyName>Wave.IoC.Unity.Tests</AssemblyName>
@@ -9,9 +9,9 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="NUnit" Version="3.10.1" />
-    <PackageReference Include="NUnit3TestAdapter" Version="3.10.0" />
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="15.9.0" />
+    <PackageReference Include="NUnit" Version="3.9.0" />
+    <PackageReference Include="NUnit3TestAdapter" Version="3.9.0" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.1.0" />
     <PackageReference Include="Unity" Version="5.9.4" />
     <PackageReference Include="Unity.RegistrationByConvention" Version="5.9.1" />
   </ItemGroup>
