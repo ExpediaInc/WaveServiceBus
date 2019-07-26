@@ -82,7 +82,7 @@ namespace Wave.Transports.RabbitMQ
 
         private void ResetConnection()
         {
-            this.connectionFactory = new ConnectionFactory { Uri = this.connectionString.AbsoluteUri, RequestedHeartbeat = 30 };
+            this.connectionFactory = new ConnectionFactory { Uri = new Uri(this.connectionString.AbsoluteUri, UriKind.Absolute), RequestedHeartbeat = 30 };
             if (this.connection != null && this.connection.IsValueCreated)
             {
                 this.connection.Value.ConnectionShutdown -= OnConnectionShutDown;
