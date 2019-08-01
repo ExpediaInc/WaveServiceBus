@@ -27,7 +27,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="RabbitMQ.Client" Version="4.1.1" />
+    <PackageReference Include="RabbitMQ.Client" Version="5.1.0" />
     <ProjectReference Include="..\Wave.Core\Wave.Core.csproj" />
   </ItemGroup>
   

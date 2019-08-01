@@ -91,6 +91,11 @@
             Retrieve IProtocol of this <see cref="T:RabbitMQ.Client.AmqpTcpEndpoint"/>.
             </summary>
         </member>
+        <member name="P:RabbitMQ.Client.AmqpTcpEndpoint.AddressFamily">
+            <summary>
+            Used to force the address family of the endpoint
+            </summary>
+        </member>
         <member name="P:RabbitMQ.Client.AmqpTcpEndpoint.Ssl">
             <summary>
             Retrieve the SSL options for this AmqpTcpEndpoint. If not set, null is returned.
@@ -223,6 +228,90 @@
             The specification currently uses "MAJOR-MINOR" as a display format.
             </remarks>
         </member>
+        <member name="M:RabbitMQ.Client.AsyncDefaultBasicConsumer.#ctor">
+            <summary>
+            Creates a new instance of an <see cref="T:RabbitMQ.Client.DefaultBasicConsumer"/>.
+            </summary>
+        </member>
+        <member name="M:RabbitMQ.Client.AsyncDefaultBasicConsumer.#ctor(RabbitMQ.Client.IModel)">
+            <summary>
+            Constructor which sets the Model property to the given value.
+            </summary>
+            <param name="model">Common AMQP model.</param>
+        </member>
+        <member name="P:RabbitMQ.Client.AsyncDefaultBasicConsumer.ConsumerTag">
+            <summary>
+            Retrieve the consumer tag this consumer is registered as; to be used when discussing this consumer
+            with the server, for instance with <see cref="M:RabbitMQ.Client.IModel.BasicCancel(System.String)"/>.
+            </summary>
+        </member>
+        <member name="P:RabbitMQ.Client.AsyncDefaultBasicConsumer.IsRunning">
+            <summary>
+            Returns true while the consumer is registered and expecting deliveries from the broker.
+            </summary>
+        </member>
+        <member name="P:RabbitMQ.Client.AsyncDefaultBasicConsumer.ShutdownReason">
+            <summary>
+            If our <see cref="T:RabbitMQ.Client.IModel"/> shuts down, this property will contain a description of the reason for the
+            shutdown. Otherwise it will contain null. See <see cref="T:RabbitMQ.Client.ShutdownEventArgs"/>.
+            </summary>
+        </member>
+        <member name="E:RabbitMQ.Client.AsyncDefaultBasicConsumer.ConsumerCancelled">
+            <summary>
+            Signalled when the consumer gets cancelled.
+            </summary>
+        </member>
+        <member name="P:RabbitMQ.Client.AsyncDefaultBasicConsumer.Model">
+            <summary>
+            Retrieve the <see cref="T:RabbitMQ.Client.IModel"/> this consumer is associated with,
+             for use in acknowledging received messages, for instance.
+            </summary>
+        </member>
+        <member name="M:RabbitMQ.Client.AsyncDefaultBasicConsumer.HandleBasicCancel(System.String)">
+            <summary>
+             Called when the consumer is cancelled for reasons other than by a basicCancel:
+             e.g. the queue has been deleted (either by this channel or  by any other channel).
+             See <see cref="M:RabbitMQ.Client.AsyncDefaultBasicConsumer.HandleBasicCancelOk(System.String)"/> for notification of consumer cancellation due to basicCancel
+            </summary>
+            <param name="consumerTag">Consumer tag this consumer is registered.</param>
+        </member>
+        <member name="M:RabbitMQ.Client.AsyncDefaultBasicConsumer.HandleBasicCancelOk(System.String)">
+            <summary>
+            Called upon successful deregistration of the consumer from the broker.
+            </summary>
+            <param name="consumerTag">Consumer tag this consumer is registered.</param>
+        </member>
+        <member name="M:RabbitMQ.Client.AsyncDefaultBasicConsumer.HandleBasicConsumeOk(System.String)">
+            <summary>
+            Called upon successful registration of the consumer with the broker.
+            </summary>
+            <param name="consumerTag">Consumer tag this consumer is registered.</param>
+        </member>
+        <member name="M:RabbitMQ.Client.AsyncDefaultBasicConsumer.HandleBasicDeliver(System.String,System.UInt64,System.Boolean,System.String,System.String,RabbitMQ.Client.IBasicProperties,System.Byte[])">
+            <summary>
+            Called each time a message arrives for this consumer.
+            </summary>
+            <remarks>
+            Does nothing with the passed in information.
+            Note that in particular, some delivered messages may require acknowledgement via <see cref="M:RabbitMQ.Client.IModel.BasicAck(System.UInt64,System.Boolean)"/>.
+            The implementation of this method in this class does NOT acknowledge such messages.
+            </remarks>
+        </member>
+        <member name="M:RabbitMQ.Client.AsyncDefaultBasicConsumer.HandleModelShutdown(System.Object,RabbitMQ.Client.ShutdownEventArgs)">
+            <summary>
+             Called when the model shuts down.
+             </summary>
+             <param name="model"> Common AMQP model.</param>
+            <param name="reason"> Information about the reason why a particular model, session, or connection was destroyed.</param>
+        </member>
+        <member name="M:RabbitMQ.Client.AsyncDefaultBasicConsumer.OnCancel">
+            <summary>
+            Default implementation - overridable in subclasses.</summary>
+            <remarks>
+            This default implementation simply sets the <see cref="P:RabbitMQ.Client.AsyncDefaultBasicConsumer.IsRunning"/> 
+            property to false, and takes no further action.
+            </remarks>
+        </member>
         <member name="T:RabbitMQ.Client.AuthMechanism">
             <summary>
             A pluggable authentication mechanism.
@@ -353,7 +442,7 @@
              A simple example of connecting to a broker:
              </para>
              <example><code>
-                 IConnectionFactory factory = new ConnectionFactory();
+                 ConnectionFactory factory = new ConnectionFactory();
                  //
                  // The next six lines are optional:
                  factory.UserName = ConnectionFactory.DefaultUser;
@@ -376,7 +465,7 @@
              </para>
              <example><code>
                  ConnectionFactory factory = new ConnectionFactory();
-                 factory.Uri = "amqp://localhost";
+                 factory.SetUri("amqp://localhost");
                  IConnection conn = factory.CreateConnection();
                  ...
              </code></example>
@@ -432,6 +521,16 @@
             </summary>
             <remarks> PLEASE KEEP THIS MATCHING THE DOC ABOVE.</remarks>
         </member>
+        <member name="P:RabbitMQ.Client.ConnectionFactory.DefaultAmqpUriSslProtocols">
+            <summary>
+            The default AMQP URI SSL protocols.
+            </summary>
+        </member>
+        <member name="P:RabbitMQ.Client.ConnectionFactory.AmqpUriSslProtocols">
+            <summary>
+            The AMQP URI SSL protocols.
+            </summary>
+        </member>
         <member name="F:RabbitMQ.Client.ConnectionFactory.DefaultAuthMechanisms">
             <summary>
              Default SASL auth mechanisms to use.
@@ -444,7 +543,14 @@
         </member>
         <member name="P:RabbitMQ.Client.ConnectionFactory.AutomaticRecoveryEnabled">
             <summary>
-            Set to true to enable automatic connection recovery.
+            Set to false to disable automatic connection recovery.
+            Defaults to true.
+            </summary>
+        </member>
+        <member name="P:RabbitMQ.Client.ConnectionFactory.DispatchConsumersAsync">
+            <summary>
+            Set to true will enable a asynchronous consumer dispatcher which is compatible with <see cref="T:RabbitMQ.Client.IAsyncBasicConsumer"/>.
+            Defaults to false.
             </summary>
         </member>
         <member name="P:RabbitMQ.Client.ConnectionFactory.HostName">
@@ -510,7 +616,8 @@
         </member>
         <member name="P:RabbitMQ.Client.ConnectionFactory.TopologyRecoveryEnabled">
             <summary>
-            Set to true to make automatic connection recovery also recover topology (exchanges, queues, bindings, etc).
+            Set to false to make automatic connection recovery not recover topology (exchanges, queues, bindings, etc).
+            Defaults to true.
             </summary>
         </member>
         <member name="P:RabbitMQ.Client.ConnectionFactory.TaskScheduler">
@@ -527,16 +634,6 @@
         <member name="P:RabbitMQ.Client.ConnectionFactory.Endpoint">
             <summary>
             Connection endpoint.
-            </summary>
-        </member>
-        <member name="P:RabbitMQ.Client.ConnectionFactory.Uri">
-            <summary>
-            Set connection parameters using the amqp or amqps scheme.
-            </summary>
-        </member>
-        <member name="P:RabbitMQ.Client.ConnectionFactory.uri">
-            <summary>
-            Set connection parameters using the amqp or amqps scheme.
             </summary>
         </member>
         <member name="P:RabbitMQ.Client.ConnectionFactory.ClientProperties">
@@ -577,6 +674,11 @@
         <member name="P:RabbitMQ.Client.ConnectionFactory.VirtualHost">
             <summary>
             Virtual host to access during this connection.
+            </summary>
+        </member>
+        <member name="P:RabbitMQ.Client.ConnectionFactory.Uri">
+            <summary>
+            Username to use when authenticating to the server.
             </summary>
         </member>
         <member name="M:RabbitMQ.Client.ConnectionFactory.AuthMechanismFactory(System.Collections.Generic.IList{System.String})">
@@ -900,6 +1002,54 @@
             <summary>
             x-priority header
             </summary>
+        </member>
+        <member name="P:RabbitMQ.Client.IAsyncBasicConsumer.Model">
+            <summary>
+            Retrieve the <see cref="T:RabbitMQ.Client.IModel"/> this consumer is associated with,
+             for use in acknowledging received messages, for instance.
+            </summary>
+        </member>
+        <member name="E:RabbitMQ.Client.IAsyncBasicConsumer.ConsumerCancelled">
+            <summary>
+            Signalled when the consumer gets cancelled.
+            </summary>
+        </member>
+        <member name="M:RabbitMQ.Client.IAsyncBasicConsumer.HandleBasicCancel(System.String)">
+            <summary>
+             Called when the consumer is cancelled for reasons other than by a basicCancel:
+             e.g. the queue has been deleted (either by this channel or  by any other channel).
+             See <see cref="M:RabbitMQ.Client.IAsyncBasicConsumer.HandleBasicCancelOk(System.String)"/> for notification of consumer cancellation due to basicCancel
+            </summary>
+            <param name="consumerTag">Consumer tag this consumer is registered.</param>
+        </member>
+        <member name="M:RabbitMQ.Client.IAsyncBasicConsumer.HandleBasicCancelOk(System.String)">
+            <summary>
+            Called upon successful deregistration of the consumer from the broker.
+            </summary>
+            <param name="consumerTag">Consumer tag this consumer is registered.</param>
+        </member>
+        <member name="M:RabbitMQ.Client.IAsyncBasicConsumer.HandleBasicConsumeOk(System.String)">
+            <summary>
+            Called upon successful registration of the consumer with the broker.
+            </summary>
+            <param name="consumerTag">Consumer tag this consumer is registered.</param>
+        </member>
+        <member name="M:RabbitMQ.Client.IAsyncBasicConsumer.HandleBasicDeliver(System.String,System.UInt64,System.Boolean,System.String,System.String,RabbitMQ.Client.IBasicProperties,System.Byte[])">
+            <summary>
+            Called each time a message arrives for this consumer.
+            </summary>
+            <remarks>
+            Does nothing with the passed in information.
+            Note that in particular, some delivered messages may require acknowledgement via <see cref="M:RabbitMQ.Client.IModel.BasicAck(System.UInt64,System.Boolean)"/>.
+            The implementation of this method in this class does NOT acknowledge such messages.
+            </remarks>
+        </member>
+        <member name="M:RabbitMQ.Client.IAsyncBasicConsumer.HandleModelShutdown(System.Object,RabbitMQ.Client.ShutdownEventArgs)">
+            <summary>
+             Called when the model shuts down.
+             </summary>
+             <param name="model"> Common AMQP model.</param>
+            <param name="reason"> Information about the reason why a particular model, session, or connection was destroyed.</param>
         </member>
         <member name="T:RabbitMQ.Client.IBasicConsumer">
              <summary>Consumer interface. Used to
@@ -1360,7 +1510,7 @@
              <remarks>
              Note that all active channels, sessions, and models will be closed if this method is called.
              In comparison to normal <see cref="M:RabbitMQ.Client.IConnection.Close"/> method, <see cref="M:RabbitMQ.Client.IConnection.Abort"/> will not throw
-             <see cref="T:RabbitMQ.Client.Exceptions.AlreadyClosedException"/> or <see cref="T:System.IO.IOException"/> during closing connection.
+             <see cref="T:System.IO.IOException"/> during closing connection.
             This method waits infinitely for the in-progress close operation to complete.
              </remarks>
         </member>
@@ -1372,7 +1522,7 @@
             The method behaves in the same way as <see cref="M:RabbitMQ.Client.IConnection.Abort"/>, with the only
             difference that the connection is closed with the given connection close code and message.
             <para>
-            The close code (See under "Reply Codes" in the AMQP specification)
+            The close code (See under "Reply Codes" in the AMQP 0-9-1 specification)
             </para>
             <para>
             A message indicating the reason for closing the connection
@@ -1419,7 +1569,7 @@
             closed if this method is called. It will wait for the in-progress
             close operation to complete. This method will not return to the caller
             until the shutdown is complete. If the connection is already closed
-            (or closing), then this method will throw <see cref="T:RabbitMQ.Client.Exceptions.AlreadyClosedException"/>.
+            (or closing), then this method will do nothing.
             It can also throw <see cref="T:System.IO.IOException"/> when socket was closed unexpectedly.
             </remarks>
         </member>
@@ -1447,7 +1597,7 @@
             Note that all active channels, sessions, and models will be
             closed if this method is called. It will wait for the in-progress
             close operation to complete with a timeout. If the connection is
-            already closed (or closing), then this method will throw <see cref="T:RabbitMQ.Client.Exceptions.AlreadyClosedException"/>.
+            already closed (or closing), then this method will do nothing.
             It can also throw <see cref="T:System.IO.IOException"/> when socket was closed unexpectedly.
             If timeout is reached and the close operations haven't finished, then socket is forced to close.
             <para>
@@ -1464,7 +1614,7 @@
             The method behaves in the same way as <see cref="M:RabbitMQ.Client.IConnection.Close(System.Int32)"/>, with the only
             difference that the connection is closed with the given connection close code and message.
             <para>
-            The close code (See under "Reply Codes" in the AMQP specification).
+            The close code (See under "Reply Codes" in the AMQP 0-9-1 specification).
             </para>
             <para>
             A message indicating the reason for closing the connection.
@@ -1526,6 +1676,11 @@
             Virtual host to access during this connection.
             </summary>
         </member>
+        <member name="P:RabbitMQ.Client.IConnectionFactory.Uri">
+            <summary>
+            Sets or gets the AMQP Uri to be used for connections.
+            </summary>
+        </member>
         <member name="M:RabbitMQ.Client.IConnectionFactory.AuthMechanismFactory(System.Collections.Generic.IList{System.String})">
             <summary>
             Given a list of mechanism names supported by the server, select a preferred mechanism,
@@ -1541,7 +1696,8 @@
             <summary>
             Create a connection to the specified endpoint.
             </summary>
-            <param name="clientProvidedName">        /// Application-specific connection name, will be displayed in the management UI
+            <param name="clientProvidedName">
+            Application-specific connection name, will be displayed in the management UI
             if RabbitMQ server supports it. This value doesn't have to be unique and cannot
             be used as a connection identifier, e.g. in HTTP API requests.
             This value is supposed to be human-readable.
@@ -1567,6 +1723,20 @@
             This value is supposed to be human-readable.
             </param>
             <returns></returns>
+        </member>
+        <member name="M:RabbitMQ.Client.IConnectionFactory.CreateConnection(System.Collections.Generic.IList{RabbitMQ.Client.AmqpTcpEndpoint})">
+            <summary>
+            Create a connection using a list of endpoints.
+            The selection behaviour can be overriden by configuring the EndpointResolverFactory.
+            </summary>
+            <param name="endpoints">
+            List of endpoints to use for the initial
+            connection and recovery.
+            </param>
+            <returns>Open connection</returns>
+            <exception cref="T:RabbitMQ.Client.Exceptions.BrokerUnreachableException">
+            When no hostname was reachable.
+            </exception>
         </member>
         <member name="P:RabbitMQ.Client.IConnectionFactory.TaskScheduler">
              <summary>
@@ -1773,7 +1943,7 @@
         </member>
         <member name="M:RabbitMQ.Client.IModel.BasicAck(System.UInt64,System.Boolean)">
             <summary>
-            (Spec method) Acknowledge one or more delivered message(s).
+            Acknowledge one or more delivered message(s).
             </summary>
         </member>
         <member name="M:RabbitMQ.Client.IModel.BasicCancel(System.String)">
@@ -1786,7 +1956,7 @@
         </member>
         <member name="M:RabbitMQ.Client.IModel.BasicGet(System.String,System.Boolean)">
             <summary>
-            (Spec method) Retrieve an individual message, if
+            Retrieve an individual message, if
             one is available; returns null if the server answers that
             no messages are currently available. See also <see cref="M:RabbitMQ.Client.IModel.BasicAck(System.UInt64,System.Boolean)"/>.
             </summary>
@@ -1796,26 +1966,33 @@
         </member>
         <member name="M:RabbitMQ.Client.IModel.BasicPublish(System.String,System.String,System.Boolean,RabbitMQ.Client.IBasicProperties,System.Byte[])">
             <summary>
-            (Spec method) Publishes a message.
+            Publishes a message.
             </summary>
+            <remarks>
+              <para>
+                Routing key must be shorter than 255 bytes.
+              </para>
+            </remarks>
         </member>
         <member name="M:RabbitMQ.Client.IModel.BasicQos(System.UInt32,System.UInt16,System.Boolean)">
             <summary>
-            (Spec method) Configures QoS parameters of the Basic content-class.
+            Configures QoS parameters of the Basic content-class.
             </summary>
         </member>
         <member name="M:RabbitMQ.Client.IModel.BasicRecover(System.Boolean)">
             <summary>
-            (Spec method).
+            Indicates that a consumer has recovered.
+            Deprecated. Should not be used.
             </summary>
         </member>
         <member name="M:RabbitMQ.Client.IModel.BasicRecoverAsync(System.Boolean)">
             <summary>
-            (Spec method).
+            Indicates that a consumer has recovered.
+            Deprecated. Should not be used.
             </summary>
         </member>
         <member name="M:RabbitMQ.Client.IModel.BasicReject(System.UInt64,System.Boolean)">
-            <summary>(Spec method) Reject a delivered message.</summary>
+            <summary> Reject a delivered message.</summary>
         </member>
         <member name="M:RabbitMQ.Client.IModel.Close">
             <summary>Close this session.</summary>
@@ -1845,6 +2022,11 @@
             Enable publisher acknowledgements.
             </summary>
         </member>
+        <member name="M:RabbitMQ.Client.IModel.CreateBasicPublishBatch">
+            <summary>
+             Creates a BasicPublishBatch instance
+            </summary>
+        </member>
         <member name="M:RabbitMQ.Client.IModel.CreateBasicProperties">
             <summary>
             Construct a completely empty content header for use with the Basic content class.
@@ -1852,16 +2034,26 @@
         </member>
         <member name="M:RabbitMQ.Client.IModel.ExchangeBind(System.String,System.String,System.String,System.Collections.Generic.IDictionary{System.String,System.Object})">
             <summary>
-            (Extension method) Bind an exchange to an exchange.
+            Bind an exchange to an exchange.
             </summary>
+            <remarks>
+              <para>
+                Routing key must be shorter than 255 bytes.
+              </para>
+            </remarks>        
         </member>
         <member name="M:RabbitMQ.Client.IModel.ExchangeBindNoWait(System.String,System.String,System.String,System.Collections.Generic.IDictionary{System.String,System.Object})">
-             <summary>
+            <summary>
             Like ExchangeBind but sets nowait to true.
-             </summary>
+            </summary>
+            <remarks>
+              <para>
+                Routing key must be shorter than 255 bytes.
+              </para>
+            </remarks>        
         </member>
         <member name="M:RabbitMQ.Client.IModel.ExchangeDeclare(System.String,System.String,System.Boolean,System.Boolean,System.Collections.Generic.IDictionary{System.String,System.Object})">
-            <summary>(Spec method) Declare an exchange.</summary>
+            <summary>Declare an exchange.</summary>
             <remarks>
             The exchange is declared non-passive and non-internal.
             The "nowait" option is not exercised.
@@ -1875,42 +2067,63 @@
         </member>
         <member name="M:RabbitMQ.Client.IModel.ExchangeDeclarePassive(System.String)">
             <summary>
-            (Spec method) Declare an exchange.
+            Do a passive exchange declaration.
             </summary>
             <remarks>
-            The exchange is declared passive.
+            This method performs a "passive declare" on an exchange,
+            which verifies whether .
+            It will do nothing if the exchange already exists and result
+            in a channel-level protocol exception (channel closure) if not.
             </remarks>
         </member>
         <member name="M:RabbitMQ.Client.IModel.ExchangeDelete(System.String,System.Boolean)">
             <summary>
-            (Spec method) Delete an exchange.
+            Delete an exchange.
             </summary>
         </member>
         <member name="M:RabbitMQ.Client.IModel.ExchangeDeleteNoWait(System.String,System.Boolean)">
-             <summary>
+            <summary>
             Like ExchangeDelete but sets nowait to true.
-             </summary>
+            </summary>
         </member>
         <member name="M:RabbitMQ.Client.IModel.ExchangeUnbind(System.String,System.String,System.String,System.Collections.Generic.IDictionary{System.String,System.Object})">
             <summary>
-            (Extension method) Unbind an exchange from an exchange.
+            Unbind an exchange from an exchange.
             </summary>
+            <remarks>
+            Routing key must be shorter than 255 bytes.
+            </remarks>
         </member>
         <member name="M:RabbitMQ.Client.IModel.ExchangeUnbindNoWait(System.String,System.String,System.String,System.Collections.Generic.IDictionary{System.String,System.Object})">
             <summary>
             Like ExchangeUnbind but sets nowait to true.
             </summary>
+            <remarks>
+              <para>
+                Routing key must be shorter than 255 bytes.
+              </para>
+            </remarks>
         </member>
         <member name="M:RabbitMQ.Client.IModel.QueueBind(System.String,System.String,System.String,System.Collections.Generic.IDictionary{System.String,System.Object})">
             <summary>
-            (Spec method) Bind a queue to an exchange.
+            Bind a queue to an exchange.
             </summary>
+            <remarks>
+              <para>
+                Routing key must be shorter than 255 bytes.
+              </para>
+            </remarks>        
         </member>
         <member name="M:RabbitMQ.Client.IModel.QueueBindNoWait(System.String,System.String,System.String,System.Collections.Generic.IDictionary{System.String,System.Object})">
             <summary>Same as QueueBind but sets nowait parameter to true.</summary>
+            <remarks>
+              <para>
+                Routing key must be shorter than 255 bytes.
+              </para>
+            </remarks>        
         </member>
         <member name="M:RabbitMQ.Client.IModel.QueueDeclare(System.String,System.Boolean,System.Boolean,System.Boolean,System.Collections.Generic.IDictionary{System.String,System.Object})">
-            <summary>(Spec method) Declare a queue.</summary>
+            <summary> Declare a queue.</summary>
         </member>
         <member name="M:RabbitMQ.Client.IModel.QueueDeclareNoWait(System.String,System.Boolean,System.Boolean,System.Boolean,System.Collections.Generic.IDictionary{System.String,System.Object})">
             <summary>
@@ -1944,7 +2157,7 @@
         </member>
         <member name="M:RabbitMQ.Client.IModel.QueueDelete(System.String,System.Boolean,System.Boolean)">
              <summary>
-             (Spec method) Delete a queue.
+             Delete a queue.
              </summary>
              <remarks>
             Returns the number of messages purged during queue deletion.
@@ -1959,7 +2172,7 @@
         </member>
         <member name="M:RabbitMQ.Client.IModel.QueuePurge(System.String)">
             <summary>
-            (Spec method) Purge a queue of messages.
+            Purge a queue of messages.
             </summary>
             <remarks>
             Returns the number of messages purged.
@@ -1967,22 +2180,27 @@
         </member>
         <member name="M:RabbitMQ.Client.IModel.QueueUnbind(System.String,System.String,System.String,System.Collections.Generic.IDictionary{System.String,System.Object})">
             <summary>
-            (Spec method) Unbind a queue from an exchange.
+            Unbind a queue from an exchange.
             </summary>
+            <remarks>
+              <para>
+                Routing key must be shorter than 255 bytes.
+              </para>
+            </remarks>        
         </member>
         <member name="M:RabbitMQ.Client.IModel.TxCommit">
             <summary>
-            (Spec method) Commit this session's active TX transaction.
+            Commit this session's active TX transaction.
             </summary>
         </member>
         <member name="M:RabbitMQ.Client.IModel.TxRollback">
             <summary>
-            (Spec method) Roll back this session's active TX transaction.
+            Roll back this session's active TX transaction.
             </summary>
         </member>
         <member name="M:RabbitMQ.Client.IModel.TxSelect">
             <summary>
-            (Spec method) Enable TX mode for this session.
+            Enable TX mode for this session.
             </summary>
         </member>
         <member name="M:RabbitMQ.Client.IModel.WaitForConfirms">
@@ -3684,6 +3902,34 @@
         <member name="M:RabbitMQ.Client.Content.StreamWireFormatting.WriteObject(RabbitMQ.Util.NetworkBinaryWriter,System.Object)">
             <exception cref="T:RabbitMQ.Client.ProtocolViolationException"/>
         </member>
+        <member name="M:RabbitMQ.Client.Events.AsyncEventingBasicConsumer.#ctor(RabbitMQ.Client.IModel)">
+            <summary>Constructor which sets the Model property to the
+            given value.</summary>
+        </member>
+        <member name="E:RabbitMQ.Client.Events.AsyncEventingBasicConsumer.Received">
+            <summary>Event fired on HandleBasicDeliver.</summary>
+        </member>
+        <member name="E:RabbitMQ.Client.Events.AsyncEventingBasicConsumer.Registered">
+            <summary>Event fired on HandleBasicConsumeOk.</summary>
+        </member>
+        <member name="E:RabbitMQ.Client.Events.AsyncEventingBasicConsumer.Shutdown">
+            <summary>Event fired on HandleModelShutdown.</summary>
+        </member>
+        <member name="E:RabbitMQ.Client.Events.AsyncEventingBasicConsumer.Unregistered">
+            <summary>Event fired on HandleBasicCancelOk.</summary>
+        </member>
+        <member name="M:RabbitMQ.Client.Events.AsyncEventingBasicConsumer.HandleBasicCancelOk(System.String)">
+            <summary>Fires the Unregistered event.</summary>
+        </member>
+        <member name="M:RabbitMQ.Client.Events.AsyncEventingBasicConsumer.HandleBasicConsumeOk(System.String)">
+            <summary>Fires the Registered event.</summary>
+        </member>
+        <member name="M:RabbitMQ.Client.Events.AsyncEventingBasicConsumer.HandleBasicDeliver(System.String,System.UInt64,System.Boolean,System.String,System.String,RabbitMQ.Client.IBasicProperties,System.Byte[])">
+            <summary>Fires the Received event.</summary>
+        </member>
+        <member name="M:RabbitMQ.Client.Events.AsyncEventingBasicConsumer.HandleModelShutdown(System.Object,RabbitMQ.Client.ShutdownEventArgs)">
+            <summary>Fires the Shutdown event.</summary>
+        </member>
         <member name="T:RabbitMQ.Client.Events.BasicAckEventArgs">
             <summary>Contains all the information about a message acknowledged
             from an AMQP broker within the Basic content-class.</summary>
@@ -3930,8 +4176,8 @@
             ConnectionFactory.CreateConnection attempt.</summary>
         </member>
         <member name="M:RabbitMQ.Client.Exceptions.BrokerUnreachableException.#ctor(System.Exception)">
-            <summary>Construct a BrokerUnreachableException. The inner exception is associated
-            with only one connection attempt.</summary>
+            <summary>Construct a BrokerUnreachableException. The inner exception is
+            an AggregateException holding the errors from multiple connection attempts.</summary>
         </member>
         <member name="T:RabbitMQ.Client.Exceptions.ChannelAllocationException">
             <summary> Thrown when a SessionManager cannot allocate a new
@@ -3952,8 +4198,8 @@
         <member name="P:RabbitMQ.Client.Exceptions.ChannelAllocationException.Channel">
             <summary>Retrieves the channel number concerned; will
             return -1 in the case where "no more free channels" is
-            being signalled, or a non-negative integer when "channel is
-            in use" is being signalled.</summary>
+            being signaled, or a non-negative integer when "channel is
+            in use" is being signaled.</summary>
         </member>
         <member name="T:RabbitMQ.Client.Exceptions.ConnectFailureException">
             <summary>Thrown when a connection to the broker fails</summary>
@@ -4028,6 +4274,18 @@
         <member name="P:RabbitMQ.Client.Exceptions.ProtocolVersionMismatchException.ServerMinor">
             <summary>The peer's AMQP specification minor version.</summary>
         </member>
+        <member name="M:RabbitMQ.Client.Exceptions.RabbitMQClientException.#ctor">
+            <summary>Initializes a new instance of the <see cref="T:RabbitMQ.Client.Exceptions.RabbitMQClientException" /> class.</summary>
+        </member>
+        <member name="M:RabbitMQ.Client.Exceptions.RabbitMQClientException.#ctor(System.String)">
+            <summary>Initializes a new instance of the <see cref="T:RabbitMQ.Client.Exceptions.RabbitMQClientException" /> class with a specified error message.</summary>
+            <param name="message">The message that describes the error. </param>
+        </member>
+        <member name="M:RabbitMQ.Client.Exceptions.RabbitMQClientException.#ctor(System.String,System.Exception)">
+            <summary>Initializes a new instance of the <see cref="T:RabbitMQ.Client.Exceptions.RabbitMQClientException" /> class with a specified error message and a reference to the inner exception that is the cause of this exception.</summary>
+            <param name="message">The error message that explains the reason for the exception. </param>
+            <param name="innerException">The exception that is the cause of the current exception, or a null reference (Nothing in Visual Basic) if no inner exception is specified. </param>
+        </member>
         <member name="T:RabbitMQ.Client.Exceptions.UnexpectedMethodException">
             <summary>
             Thrown when the model receives an RPC reply that it wasn't expecting.
@@ -4071,593 +4329,6 @@
         <member name="P:RabbitMQ.Client.Exceptions.WireFormattingException.Offender">
             <summary>Object which this exception is complaining about;
             may be null if no particular offender exists</summary>
-        </member>
-        <member name="M:RabbitMQ.Client.Framing.Impl.AutorecoveringConnection.Abort">
-            <summary>API-side invocation of connection abort.</summary>
-        </member>
-        <member name="M:RabbitMQ.Client.Framing.Impl.AutorecoveringConnection.Abort(System.UInt16,System.String)">
-            <summary>API-side invocation of connection abort.</summary>
-        </member>
-        <member name="M:RabbitMQ.Client.Framing.Impl.AutorecoveringConnection.Abort(System.Int32)">
-            <summary>API-side invocation of connection abort with timeout.</summary>
-        </member>
-        <member name="M:RabbitMQ.Client.Framing.Impl.AutorecoveringConnection.Abort(System.UInt16,System.String,System.Int32)">
-            <summary>API-side invocation of connection abort with timeout.</summary>
-        </member>
-        <member name="M:RabbitMQ.Client.Framing.Impl.AutorecoveringConnection.Close">
-            <summary>API-side invocation of connection.close.</summary>
-        </member>
-        <member name="M:RabbitMQ.Client.Framing.Impl.AutorecoveringConnection.Close(System.UInt16,System.String)">
-            <summary>API-side invocation of connection.close.</summary>
-        </member>
-        <member name="M:RabbitMQ.Client.Framing.Impl.AutorecoveringConnection.Close(System.Int32)">
-            <summary>API-side invocation of connection.close with timeout.</summary>
-        </member>
-        <member name="M:RabbitMQ.Client.Framing.Impl.AutorecoveringConnection.Close(System.UInt16,System.String,System.Int32)">
-            <summary>API-side invocation of connection.close with timeout.</summary>
-        </member>
-        <member name="F:RabbitMQ.Client.Framing.Impl.Connection.m_heartbeatFrame">
-            <summary>Heartbeat frame for transmission. Reusable across connections.</summary>
-        </member>
-        <member name="P:RabbitMQ.Client.Framing.Impl.Connection.Protocol">
-            <summary>Another overload of a Protocol property, useful
-            for exposing a tighter type.</summary>
-        </member>
-        <member name="P:RabbitMQ.Client.Framing.Impl.Connection.RabbitMQ#Client#IConnection#Protocol">
-            <summary>Explicit implementation of IConnection.Protocol.</summary>
-        </member>
-        <member name="M:RabbitMQ.Client.Framing.Impl.Connection.Close(RabbitMQ.Client.ShutdownEventArgs,System.Boolean,System.Int32)">
-            <summary>Try to close connection in a graceful way</summary>
-            <remarks>
-            <para>
-            Shutdown reason contains code and text assigned when closing the connection,
-            as well as the information about what initiated the close
-            </para>
-            <para>
-            Abort flag, if true, signals to close the ongoing connection immediately
-            and do not report any errors if it was already closed.
-            </para>
-            <para>
-            Timeout determines how much time internal close operations should be given
-            to complete. Negative or Timeout.Infinite value mean infinity.
-            </para>
-            </remarks>
-        </member>
-        <member name="M:RabbitMQ.Client.Framing.Impl.Connection.ClosingLoop">
-            <remarks>
-             Loop only used while quiescing. Use only to cleanly close connection
-            </remarks>
-        </member>
-        <member name="M:RabbitMQ.Client.Framing.Impl.Connection.HandleDomainUnload(System.Object,System.EventArgs)">
-            <remarks>
-            We need to close the socket, otherwise attempting to unload the domain
-            could cause a CannotUnloadAppDomainException
-            </remarks>
-        </member>
-        <member name="M:RabbitMQ.Client.Framing.Impl.Connection.OnShutdown">
-            <summary>Broadcasts notification of the final shutdown of the connection.</summary>
-        </member>
-        <member name="M:RabbitMQ.Client.Framing.Impl.Connection.QuiesceChannel(RabbitMQ.Client.Impl.SoftProtocolException)">
-            <summary>
-             Sets the channel named in the SoftProtocolException into
-             "quiescing mode", where we issue a channel.close and
-             ignore everything except for subsequent channel.close
-             messages and the channel.close-ok reply that should
-             eventually arrive.
-            </summary>
-            <remarks>
-            <para>
-             Since a well-behaved peer will not wait indefinitely before
-             issuing the close-ok, we don't bother with a timeout here;
-             compare this to the case of a connection.close-ok, where a
-             timeout is necessary.
-            </para>
-            <para>
-             We need to send the close method and politely wait for a
-             reply before marking the channel as available for reuse.
-            </para>
-            <para>
-             As soon as SoftProtocolException is detected, we should stop
-             servicing ordinary application work, and should concentrate
-             on bringing down the channel as quickly and gracefully as
-             possible. The way this is done, as per the close-protocol,
-             is to signal closure up the stack *before* sending the
-             channel.close, by invoking ISession.Close. Once the upper
-             layers have been signalled, we are free to do what we need
-             to do to clean up and shut down the channel.
-            </para>
-            </remarks>
-        </member>
-        <member name="M:RabbitMQ.Client.Framing.Impl.Connection.TerminateMainloop">
-            <remarks>
-             May be called more than once. Should therefore be idempotent.
-            </remarks>
-        </member>
-        <member name="M:RabbitMQ.Client.Framing.Impl.Connection.Abort">
-            <summary>API-side invocation of connection abort.</summary>
-        </member>
-        <member name="M:RabbitMQ.Client.Framing.Impl.Connection.Abort(System.UInt16,System.String)">
-            <summary>API-side invocation of connection abort.</summary>
-        </member>
-        <member name="M:RabbitMQ.Client.Framing.Impl.Connection.Abort(System.Int32)">
-            <summary>API-side invocation of connection abort with timeout.</summary>
-        </member>
-        <member name="M:RabbitMQ.Client.Framing.Impl.Connection.Abort(System.UInt16,System.String,System.Int32)">
-            <summary>API-side invocation of connection abort with timeout.</summary>
-        </member>
-        <member name="M:RabbitMQ.Client.Framing.Impl.Connection.Close">
-            <summary>API-side invocation of connection.close.</summary>
-        </member>
-        <member name="M:RabbitMQ.Client.Framing.Impl.Connection.Close(System.UInt16,System.String)">
-            <summary>API-side invocation of connection.close.</summary>
-        </member>
-        <member name="M:RabbitMQ.Client.Framing.Impl.Connection.Close(System.Int32)">
-            <summary>API-side invocation of connection.close with timeout.</summary>
-        </member>
-        <member name="M:RabbitMQ.Client.Framing.Impl.Connection.Close(System.UInt16,System.String,System.Int32)">
-            <summary>API-side invocation of connection.close with timeout.</summary>
-        </member>
-        <member name="T:RabbitMQ.Client.Framing.Impl.ConnectionStart">
-            <summary>Autogenerated type. Private implementation class - do not use directly.</summary>
-        </member>
-        <member name="T:RabbitMQ.Client.Framing.Impl.ConnectionStartOk">
-            <summary>Autogenerated type. Private implementation class - do not use directly.</summary>
-        </member>
-        <member name="T:RabbitMQ.Client.Framing.Impl.ConnectionSecure">
-            <summary>Autogenerated type. Private implementation class - do not use directly.</summary>
-        </member>
-        <member name="T:RabbitMQ.Client.Framing.Impl.ConnectionSecureOk">
-            <summary>Autogenerated type. Private implementation class - do not use directly.</summary>
-        </member>
-        <member name="T:RabbitMQ.Client.Framing.Impl.ConnectionTune">
-            <summary>Autogenerated type. Private implementation class - do not use directly.</summary>
-        </member>
-        <member name="T:RabbitMQ.Client.Framing.Impl.ConnectionTuneOk">
-            <summary>Autogenerated type. Private implementation class - do not use directly.</summary>
-        </member>
-        <member name="T:RabbitMQ.Client.Framing.Impl.ConnectionOpen">
-            <summary>Autogenerated type. Private implementation class - do not use directly.</summary>
-        </member>
-        <member name="T:RabbitMQ.Client.Framing.Impl.ConnectionOpenOk">
-            <summary>Autogenerated type. Private implementation class - do not use directly.</summary>
-        </member>
-        <member name="T:RabbitMQ.Client.Framing.Impl.ConnectionClose">
-            <summary>Autogenerated type. Private implementation class - do not use directly.</summary>
-        </member>
-        <member name="T:RabbitMQ.Client.Framing.Impl.ConnectionCloseOk">
-            <summary>Autogenerated type. Private implementation class - do not use directly.</summary>
-        </member>
-        <member name="T:RabbitMQ.Client.Framing.Impl.ConnectionBlocked">
-            <summary>Autogenerated type. Private implementation class - do not use directly.</summary>
-        </member>
-        <member name="T:RabbitMQ.Client.Framing.Impl.ConnectionUnblocked">
-            <summary>Autogenerated type. Private implementation class - do not use directly.</summary>
-        </member>
-        <member name="T:RabbitMQ.Client.Framing.Impl.ChannelOpen">
-            <summary>Autogenerated type. Private implementation class - do not use directly.</summary>
-        </member>
-        <member name="T:RabbitMQ.Client.Framing.Impl.ChannelOpenOk">
-            <summary>Autogenerated type. Private implementation class - do not use directly.</summary>
-        </member>
-        <member name="T:RabbitMQ.Client.Framing.Impl.ChannelFlow">
-            <summary>Autogenerated type. Private implementation class - do not use directly.</summary>
-        </member>
-        <member name="T:RabbitMQ.Client.Framing.Impl.ChannelFlowOk">
-            <summary>Autogenerated type. Private implementation class - do not use directly.</summary>
-        </member>
-        <member name="T:RabbitMQ.Client.Framing.Impl.ChannelClose">
-            <summary>Autogenerated type. Private implementation class - do not use directly.</summary>
-        </member>
-        <member name="T:RabbitMQ.Client.Framing.Impl.ChannelCloseOk">
-            <summary>Autogenerated type. Private implementation class - do not use directly.</summary>
-        </member>
-        <member name="T:RabbitMQ.Client.Framing.Impl.ExchangeDeclare">
-            <summary>Autogenerated type. Private implementation class - do not use directly.</summary>
-        </member>
-        <member name="T:RabbitMQ.Client.Framing.Impl.ExchangeDeclareOk">
-            <summary>Autogenerated type. Private implementation class - do not use directly.</summary>
-        </member>
-        <member name="T:RabbitMQ.Client.Framing.Impl.ExchangeDelete">
-            <summary>Autogenerated type. Private implementation class - do not use directly.</summary>
-        </member>
-        <member name="T:RabbitMQ.Client.Framing.Impl.ExchangeDeleteOk">
-            <summary>Autogenerated type. Private implementation class - do not use directly.</summary>
-        </member>
-        <member name="T:RabbitMQ.Client.Framing.Impl.ExchangeBind">
-            <summary>Autogenerated type. Private implementation class - do not use directly.</summary>
-        </member>
-        <member name="T:RabbitMQ.Client.Framing.Impl.ExchangeBindOk">
-            <summary>Autogenerated type. Private implementation class - do not use directly.</summary>
-        </member>
-        <member name="T:RabbitMQ.Client.Framing.Impl.ExchangeUnbind">
-            <summary>Autogenerated type. Private implementation class - do not use directly.</summary>
-        </member>
-        <member name="T:RabbitMQ.Client.Framing.Impl.ExchangeUnbindOk">
-            <summary>Autogenerated type. Private implementation class - do not use directly.</summary>
-        </member>
-        <member name="T:RabbitMQ.Client.Framing.Impl.QueueDeclare">
-            <summary>Autogenerated type. Private implementation class - do not use directly.</summary>
-        </member>
-        <member name="T:RabbitMQ.Client.Framing.Impl.QueueDeclareOk">
-            <summary>Autogenerated type. Private implementation class - do not use directly.</summary>
-        </member>
-        <member name="T:RabbitMQ.Client.Framing.Impl.QueueBind">
-            <summary>Autogenerated type. Private implementation class - do not use directly.</summary>
-        </member>
-        <member name="T:RabbitMQ.Client.Framing.Impl.QueueBindOk">
-            <summary>Autogenerated type. Private implementation class - do not use directly.</summary>
-        </member>
-        <member name="T:RabbitMQ.Client.Framing.Impl.QueueUnbind">
-            <summary>Autogenerated type. Private implementation class - do not use directly.</summary>
-        </member>
-        <member name="T:RabbitMQ.Client.Framing.Impl.QueueUnbindOk">
-            <summary>Autogenerated type. Private implementation class - do not use directly.</summary>
-        </member>
-        <member name="T:RabbitMQ.Client.Framing.Impl.QueuePurge">
-            <summary>Autogenerated type. Private implementation class - do not use directly.</summary>
-        </member>
-        <member name="T:RabbitMQ.Client.Framing.Impl.QueuePurgeOk">
-            <summary>Autogenerated type. Private implementation class - do not use directly.</summary>
-        </member>
-        <member name="T:RabbitMQ.Client.Framing.Impl.QueueDelete">
-            <summary>Autogenerated type. Private implementation class - do not use directly.</summary>
-        </member>
-        <member name="T:RabbitMQ.Client.Framing.Impl.QueueDeleteOk">
-            <summary>Autogenerated type. Private implementation class - do not use directly.</summary>
-        </member>
-        <member name="T:RabbitMQ.Client.Framing.Impl.BasicQos">
-            <summary>Autogenerated type. Private implementation class - do not use directly.</summary>
-        </member>
-        <member name="T:RabbitMQ.Client.Framing.Impl.BasicQosOk">
-            <summary>Autogenerated type. Private implementation class - do not use directly.</summary>
-        </member>
-        <member name="T:RabbitMQ.Client.Framing.Impl.BasicConsume">
-            <summary>Autogenerated type. Private implementation class - do not use directly.</summary>
-        </member>
-        <member name="T:RabbitMQ.Client.Framing.Impl.BasicConsumeOk">
-            <summary>Autogenerated type. Private implementation class - do not use directly.</summary>
-        </member>
-        <member name="T:RabbitMQ.Client.Framing.Impl.BasicCancel">
-            <summary>Autogenerated type. Private implementation class - do not use directly.</summary>
-        </member>
-        <member name="T:RabbitMQ.Client.Framing.Impl.BasicCancelOk">
-            <summary>Autogenerated type. Private implementation class - do not use directly.</summary>
-        </member>
-        <member name="T:RabbitMQ.Client.Framing.Impl.BasicPublish">
-            <summary>Autogenerated type. Private implementation class - do not use directly.</summary>
-        </member>
-        <member name="T:RabbitMQ.Client.Framing.Impl.BasicReturn">
-            <summary>Autogenerated type. Private implementation class - do not use directly.</summary>
-        </member>
-        <member name="T:RabbitMQ.Client.Framing.Impl.BasicDeliver">
-            <summary>Autogenerated type. Private implementation class - do not use directly.</summary>
-        </member>
-        <member name="T:RabbitMQ.Client.Framing.Impl.BasicGet">
-            <summary>Autogenerated type. Private implementation class - do not use directly.</summary>
-        </member>
-        <member name="T:RabbitMQ.Client.Framing.Impl.BasicGetOk">
-            <summary>Autogenerated type. Private implementation class - do not use directly.</summary>
-        </member>
-        <member name="T:RabbitMQ.Client.Framing.Impl.BasicGetEmpty">
-            <summary>Autogenerated type. Private implementation class - do not use directly.</summary>
-        </member>
-        <member name="T:RabbitMQ.Client.Framing.Impl.BasicAck">
-            <summary>Autogenerated type. Private implementation class - do not use directly.</summary>
-        </member>
-        <member name="T:RabbitMQ.Client.Framing.Impl.BasicReject">
-            <summary>Autogenerated type. Private implementation class - do not use directly.</summary>
-        </member>
-        <member name="T:RabbitMQ.Client.Framing.Impl.BasicRecoverAsync">
-            <summary>Autogenerated type. Private implementation class - do not use directly.</summary>
-        </member>
-        <member name="T:RabbitMQ.Client.Framing.Impl.BasicRecover">
-            <summary>Autogenerated type. Private implementation class - do not use directly.</summary>
-        </member>
-        <member name="T:RabbitMQ.Client.Framing.Impl.BasicRecoverOk">
-            <summary>Autogenerated type. Private implementation class - do not use directly.</summary>
-        </member>
-        <member name="T:RabbitMQ.Client.Framing.Impl.BasicNack">
-            <summary>Autogenerated type. Private implementation class - do not use directly.</summary>
-        </member>
-        <member name="T:RabbitMQ.Client.Framing.Impl.TxSelect">
-            <summary>Autogenerated type. Private implementation class - do not use directly.</summary>
-        </member>
-        <member name="T:RabbitMQ.Client.Framing.Impl.TxSelectOk">
-            <summary>Autogenerated type. Private implementation class - do not use directly.</summary>
-        </member>
-        <member name="T:RabbitMQ.Client.Framing.Impl.TxCommit">
-            <summary>Autogenerated type. Private implementation class - do not use directly.</summary>
-        </member>
-        <member name="T:RabbitMQ.Client.Framing.Impl.TxCommitOk">
-            <summary>Autogenerated type. Private implementation class - do not use directly.</summary>
-        </member>
-        <member name="T:RabbitMQ.Client.Framing.Impl.TxRollback">
-            <summary>Autogenerated type. Private implementation class - do not use directly.</summary>
-        </member>
-        <member name="T:RabbitMQ.Client.Framing.Impl.TxRollbackOk">
-            <summary>Autogenerated type. Private implementation class - do not use directly.</summary>
-        </member>
-        <member name="T:RabbitMQ.Client.Framing.Impl.ConfirmSelect">
-            <summary>Autogenerated type. Private implementation class - do not use directly.</summary>
-        </member>
-        <member name="T:RabbitMQ.Client.Framing.Impl.ConfirmSelectOk">
-            <summary>Autogenerated type. Private implementation class - do not use directly.</summary>
-        </member>
-        <member name="P:RabbitMQ.Client.Framing.Protocol.MajorVersion">
-            <summary>Protocol major version (= 0)</summary>
-        </member>
-        <member name="P:RabbitMQ.Client.Framing.Protocol.MinorVersion">
-            <summary>Protocol minor version (= 9)</summary>
-        </member>
-        <member name="P:RabbitMQ.Client.Framing.Protocol.Revision">
-            <summary>Protocol revision (= 1)</summary>
-        </member>
-        <member name="P:RabbitMQ.Client.Framing.Protocol.ApiName">
-            <summary>Protocol API name (= :AMQP_0_9_1)</summary>
-        </member>
-        <member name="P:RabbitMQ.Client.Framing.Protocol.DefaultPort">
-            <summary>Default TCP port (= 5672)</summary>
-        </member>
-        <member name="F:RabbitMQ.Client.Framing.Constants.FrameMethod">
-            <summary>(= 1)</summary>
-        </member>
-        <member name="F:RabbitMQ.Client.Framing.Constants.FrameHeader">
-            <summary>(= 2)</summary>
-        </member>
-        <member name="F:RabbitMQ.Client.Framing.Constants.FrameBody">
-            <summary>(= 3)</summary>
-        </member>
-        <member name="F:RabbitMQ.Client.Framing.Constants.FrameHeartbeat">
-            <summary>(= 8)</summary>
-        </member>
-        <member name="F:RabbitMQ.Client.Framing.Constants.FrameMinSize">
-            <summary>(= 4096)</summary>
-        </member>
-        <member name="F:RabbitMQ.Client.Framing.Constants.FrameEnd">
-            <summary>(= 206)</summary>
-        </member>
-        <member name="F:RabbitMQ.Client.Framing.Constants.ReplySuccess">
-            <summary>(= 200)</summary>
-        </member>
-        <member name="F:RabbitMQ.Client.Framing.Constants.ContentTooLarge">
-            <summary>(= 311)</summary>
-        </member>
-        <member name="F:RabbitMQ.Client.Framing.Constants.NoConsumers">
-            <summary>(= 313)</summary>
-        </member>
-        <member name="F:RabbitMQ.Client.Framing.Constants.ConnectionForced">
-            <summary>(= 320)</summary>
-        </member>
-        <member name="F:RabbitMQ.Client.Framing.Constants.InvalidPath">
-            <summary>(= 402)</summary>
-        </member>
-        <member name="F:RabbitMQ.Client.Framing.Constants.AccessRefused">
-            <summary>(= 403)</summary>
-        </member>
-        <member name="F:RabbitMQ.Client.Framing.Constants.NotFound">
-            <summary>(= 404)</summary>
-        </member>
-        <member name="F:RabbitMQ.Client.Framing.Constants.ResourceLocked">
-            <summary>(= 405)</summary>
-        </member>
-        <member name="F:RabbitMQ.Client.Framing.Constants.PreconditionFailed">
-            <summary>(= 406)</summary>
-        </member>
-        <member name="F:RabbitMQ.Client.Framing.Constants.FrameError">
-            <summary>(= 501)</summary>
-        </member>
-        <member name="F:RabbitMQ.Client.Framing.Constants.SyntaxError">
-            <summary>(= 502)</summary>
-        </member>
-        <member name="F:RabbitMQ.Client.Framing.Constants.CommandInvalid">
-            <summary>(= 503)</summary>
-        </member>
-        <member name="F:RabbitMQ.Client.Framing.Constants.ChannelError">
-            <summary>(= 504)</summary>
-        </member>
-        <member name="F:RabbitMQ.Client.Framing.Constants.UnexpectedFrame">
-            <summary>(= 505)</summary>
-        </member>
-        <member name="F:RabbitMQ.Client.Framing.Constants.ResourceError">
-            <summary>(= 506)</summary>
-        </member>
-        <member name="F:RabbitMQ.Client.Framing.Constants.NotAllowed">
-            <summary>(= 530)</summary>
-        </member>
-        <member name="F:RabbitMQ.Client.Framing.Constants.NotImplemented">
-            <summary>(= 540)</summary>
-        </member>
-        <member name="F:RabbitMQ.Client.Framing.Constants.InternalError">
-            <summary>(= 541)</summary>
-        </member>
-        <member name="T:RabbitMQ.Client.Framing.IConnectionStart">
-            <summary>Autogenerated type. AMQP specification method "connection.start".</summary>
-        </member>
-        <member name="T:RabbitMQ.Client.Framing.IConnectionStartOk">
-            <summary>Autogenerated type. AMQP specification method "connection.start-ok".</summary>
-        </member>
-        <member name="T:RabbitMQ.Client.Framing.IConnectionSecure">
-            <summary>Autogenerated type. AMQP specification method "connection.secure".</summary>
-        </member>
-        <member name="T:RabbitMQ.Client.Framing.IConnectionSecureOk">
-            <summary>Autogenerated type. AMQP specification method "connection.secure-ok".</summary>
-        </member>
-        <member name="T:RabbitMQ.Client.Framing.IConnectionTune">
-            <summary>Autogenerated type. AMQP specification method "connection.tune".</summary>
-        </member>
-        <member name="T:RabbitMQ.Client.Framing.IConnectionTuneOk">
-            <summary>Autogenerated type. AMQP specification method "connection.tune-ok".</summary>
-        </member>
-        <member name="T:RabbitMQ.Client.Framing.IConnectionOpen">
-            <summary>Autogenerated type. AMQP specification method "connection.open".</summary>
-        </member>
-        <member name="T:RabbitMQ.Client.Framing.IConnectionOpenOk">
-            <summary>Autogenerated type. AMQP specification method "connection.open-ok".</summary>
-        </member>
-        <member name="T:RabbitMQ.Client.Framing.IConnectionClose">
-            <summary>Autogenerated type. AMQP specification method "connection.close".</summary>
-        </member>
-        <member name="T:RabbitMQ.Client.Framing.IConnectionCloseOk">
-            <summary>Autogenerated type. AMQP specification method "connection.close-ok".</summary>
-        </member>
-        <member name="T:RabbitMQ.Client.Framing.IConnectionBlocked">
-            <summary>Autogenerated type. AMQP specification method "connection.blocked".</summary>
-        </member>
-        <member name="T:RabbitMQ.Client.Framing.IConnectionUnblocked">
-            <summary>Autogenerated type. AMQP specification method "connection.unblocked".</summary>
-        </member>
-        <member name="T:RabbitMQ.Client.Framing.IChannelOpen">
-            <summary>Autogenerated type. AMQP specification method "channel.open".</summary>
-        </member>
-        <member name="T:RabbitMQ.Client.Framing.IChannelOpenOk">
-            <summary>Autogenerated type. AMQP specification method "channel.open-ok".</summary>
-        </member>
-        <member name="T:RabbitMQ.Client.Framing.IChannelFlow">
-            <summary>Autogenerated type. AMQP specification method "channel.flow".</summary>
-        </member>
-        <member name="T:RabbitMQ.Client.Framing.IChannelFlowOk">
-            <summary>Autogenerated type. AMQP specification method "channel.flow-ok".</summary>
-        </member>
-        <member name="T:RabbitMQ.Client.Framing.IChannelClose">
-            <summary>Autogenerated type. AMQP specification method "channel.close".</summary>
-        </member>
-        <member name="T:RabbitMQ.Client.Framing.IChannelCloseOk">
-            <summary>Autogenerated type. AMQP specification method "channel.close-ok".</summary>
-        </member>
-        <member name="T:RabbitMQ.Client.Framing.IExchangeDeclare">
-            <summary>Autogenerated type. AMQP specification method "exchange.declare".</summary>
-        </member>
-        <member name="T:RabbitMQ.Client.Framing.IExchangeDeclareOk">
-            <summary>Autogenerated type. AMQP specification method "exchange.declare-ok".</summary>
-        </member>
-        <member name="T:RabbitMQ.Client.Framing.IExchangeDelete">
-            <summary>Autogenerated type. AMQP specification method "exchange.delete".</summary>
-        </member>
-        <member name="T:RabbitMQ.Client.Framing.IExchangeDeleteOk">
-            <summary>Autogenerated type. AMQP specification method "exchange.delete-ok".</summary>
-        </member>
-        <member name="T:RabbitMQ.Client.Framing.IExchangeBind">
-            <summary>Autogenerated type. AMQP specification method "exchange.bind".</summary>
-        </member>
-        <member name="T:RabbitMQ.Client.Framing.IExchangeBindOk">
-            <summary>Autogenerated type. AMQP specification method "exchange.bind-ok".</summary>
-        </member>
-        <member name="T:RabbitMQ.Client.Framing.IExchangeUnbind">
-            <summary>Autogenerated type. AMQP specification method "exchange.unbind".</summary>
-        </member>
-        <member name="T:RabbitMQ.Client.Framing.IExchangeUnbindOk">
-            <summary>Autogenerated type. AMQP specification method "exchange.unbind-ok".</summary>
-        </member>
-        <member name="T:RabbitMQ.Client.Framing.IQueueDeclare">
-            <summary>Autogenerated type. AMQP specification method "queue.declare".</summary>
-        </member>
-        <member name="T:RabbitMQ.Client.Framing.IQueueDeclareOk">
-            <summary>Autogenerated type. AMQP specification method "queue.declare-ok".</summary>
-        </member>
-        <member name="T:RabbitMQ.Client.Framing.IQueueBind">
-            <summary>Autogenerated type. AMQP specification method "queue.bind".</summary>
-        </member>
-        <member name="T:RabbitMQ.Client.Framing.IQueueBindOk">
-            <summary>Autogenerated type. AMQP specification method "queue.bind-ok".</summary>
-        </member>
-        <member name="T:RabbitMQ.Client.Framing.IQueueUnbind">
-            <summary>Autogenerated type. AMQP specification method "queue.unbind".</summary>
-        </member>
-        <member name="T:RabbitMQ.Client.Framing.IQueueUnbindOk">
-            <summary>Autogenerated type. AMQP specification method "queue.unbind-ok".</summary>
-        </member>
-        <member name="T:RabbitMQ.Client.Framing.IQueuePurge">
-            <summary>Autogenerated type. AMQP specification method "queue.purge".</summary>
-        </member>
-        <member name="T:RabbitMQ.Client.Framing.IQueuePurgeOk">
-            <summary>Autogenerated type. AMQP specification method "queue.purge-ok".</summary>
-        </member>
-        <member name="T:RabbitMQ.Client.Framing.IQueueDelete">
-            <summary>Autogenerated type. AMQP specification method "queue.delete".</summary>
-        </member>
-        <member name="T:RabbitMQ.Client.Framing.IQueueDeleteOk">
-            <summary>Autogenerated type. AMQP specification method "queue.delete-ok".</summary>
-        </member>
-        <member name="T:RabbitMQ.Client.Framing.IBasicQos">
-            <summary>Autogenerated type. AMQP specification method "basic.qos".</summary>
-        </member>
-        <member name="T:RabbitMQ.Client.Framing.IBasicQosOk">
-            <summary>Autogenerated type. AMQP specification method "basic.qos-ok".</summary>
-        </member>
-        <member name="T:RabbitMQ.Client.Framing.IBasicConsume">
-            <summary>Autogenerated type. AMQP specification method "basic.consume".</summary>
-        </member>
-        <member name="T:RabbitMQ.Client.Framing.IBasicConsumeOk">
-            <summary>Autogenerated type. AMQP specification method "basic.consume-ok".</summary>
-        </member>
-        <member name="T:RabbitMQ.Client.Framing.IBasicCancel">
-            <summary>Autogenerated type. AMQP specification method "basic.cancel".</summary>
-        </member>
-        <member name="T:RabbitMQ.Client.Framing.IBasicCancelOk">
-            <summary>Autogenerated type. AMQP specification method "basic.cancel-ok".</summary>
-        </member>
-        <member name="T:RabbitMQ.Client.Framing.IBasicPublish">
-            <summary>Autogenerated type. AMQP specification method "basic.publish".</summary>
-        </member>
-        <member name="T:RabbitMQ.Client.Framing.IBasicReturn">
-            <summary>Autogenerated type. AMQP specification method "basic.return".</summary>
-        </member>
-        <member name="T:RabbitMQ.Client.Framing.IBasicDeliver">
-            <summary>Autogenerated type. AMQP specification method "basic.deliver".</summary>
-        </member>
-        <member name="T:RabbitMQ.Client.Framing.IBasicGet">
-            <summary>Autogenerated type. AMQP specification method "basic.get".</summary>
-        </member>
-        <member name="T:RabbitMQ.Client.Framing.IBasicGetOk">
-            <summary>Autogenerated type. AMQP specification method "basic.get-ok".</summary>
-        </member>
-        <member name="T:RabbitMQ.Client.Framing.IBasicGetEmpty">
-            <summary>Autogenerated type. AMQP specification method "basic.get-empty".</summary>
-        </member>
-        <member name="T:RabbitMQ.Client.Framing.IBasicAck">
-            <summary>Autogenerated type. AMQP specification method "basic.ack".</summary>
-        </member>
-        <member name="T:RabbitMQ.Client.Framing.IBasicReject">
-            <summary>Autogenerated type. AMQP specification method "basic.reject".</summary>
-        </member>
-        <member name="T:RabbitMQ.Client.Framing.IBasicRecoverAsync">
-            <summary>Autogenerated type. AMQP specification method "basic.recover-async".</summary>
-        </member>
-        <member name="T:RabbitMQ.Client.Framing.IBasicRecover">
-            <summary>Autogenerated type. AMQP specification method "basic.recover".</summary>
-        </member>
-        <member name="T:RabbitMQ.Client.Framing.IBasicRecoverOk">
-            <summary>Autogenerated type. AMQP specification method "basic.recover-ok".</summary>
-        </member>
-        <member name="T:RabbitMQ.Client.Framing.IBasicNack">
-            <summary>Autogenerated type. AMQP specification method "basic.nack".</summary>
-        </member>
-        <member name="T:RabbitMQ.Client.Framing.ITxSelect">
-            <summary>Autogenerated type. AMQP specification method "tx.select".</summary>
-        </member>
-        <member name="T:RabbitMQ.Client.Framing.ITxSelectOk">
-            <summary>Autogenerated type. AMQP specification method "tx.select-ok".</summary>
-        </member>
-        <member name="T:RabbitMQ.Client.Framing.ITxCommit">
-            <summary>Autogenerated type. AMQP specification method "tx.commit".</summary>
-        </member>
-        <member name="T:RabbitMQ.Client.Framing.ITxCommitOk">
-            <summary>Autogenerated type. AMQP specification method "tx.commit-ok".</summary>
-        </member>
-        <member name="T:RabbitMQ.Client.Framing.ITxRollback">
-            <summary>Autogenerated type. AMQP specification method "tx.rollback".</summary>
-        </member>
-        <member name="T:RabbitMQ.Client.Framing.ITxRollbackOk">
-            <summary>Autogenerated type. AMQP specification method "tx.rollback-ok".</summary>
-        </member>
-        <member name="T:RabbitMQ.Client.Framing.IConfirmSelect">
-            <summary>Autogenerated type. AMQP specification method "confirm.select".</summary>
-        </member>
-        <member name="T:RabbitMQ.Client.Framing.IConfirmSelectOk">
-            <summary>Autogenerated type. AMQP specification method "confirm.select-ok".</summary>
-        </member>
-        <member name="T:RabbitMQ.Client.Framing.BasicProperties">
-            <summary>Autogenerated type. AMQP specification content header properties for content class "basic"</summary>
         </member>
         <member name="P:RabbitMQ.Client.Impl.BasicProperties.AppId">
             <summary>
@@ -5399,6 +5070,593 @@
             </para>
             </remarks>
         </member>
+        <member name="M:RabbitMQ.Client.Framing.Impl.AutorecoveringConnection.Abort">
+            <summary>API-side invocation of connection abort.</summary>
+        </member>
+        <member name="M:RabbitMQ.Client.Framing.Impl.AutorecoveringConnection.Abort(System.UInt16,System.String)">
+            <summary>API-side invocation of connection abort.</summary>
+        </member>
+        <member name="M:RabbitMQ.Client.Framing.Impl.AutorecoveringConnection.Abort(System.Int32)">
+            <summary>API-side invocation of connection abort with timeout.</summary>
+        </member>
+        <member name="M:RabbitMQ.Client.Framing.Impl.AutorecoveringConnection.Abort(System.UInt16,System.String,System.Int32)">
+            <summary>API-side invocation of connection abort with timeout.</summary>
+        </member>
+        <member name="M:RabbitMQ.Client.Framing.Impl.AutorecoveringConnection.Close">
+            <summary>API-side invocation of connection.close.</summary>
+        </member>
+        <member name="M:RabbitMQ.Client.Framing.Impl.AutorecoveringConnection.Close(System.UInt16,System.String)">
+            <summary>API-side invocation of connection.close.</summary>
+        </member>
+        <member name="M:RabbitMQ.Client.Framing.Impl.AutorecoveringConnection.Close(System.Int32)">
+            <summary>API-side invocation of connection.close with timeout.</summary>
+        </member>
+        <member name="M:RabbitMQ.Client.Framing.Impl.AutorecoveringConnection.Close(System.UInt16,System.String,System.Int32)">
+            <summary>API-side invocation of connection.close with timeout.</summary>
+        </member>
+        <member name="F:RabbitMQ.Client.Framing.Impl.Connection.m_heartbeatFrame">
+            <summary>Heartbeat frame for transmission. Reusable across connections.</summary>
+        </member>
+        <member name="P:RabbitMQ.Client.Framing.Impl.Connection.Protocol">
+            <summary>Another overload of a Protocol property, useful
+            for exposing a tighter type.</summary>
+        </member>
+        <member name="P:RabbitMQ.Client.Framing.Impl.Connection.RabbitMQ#Client#IConnection#Protocol">
+            <summary>Explicit implementation of IConnection.Protocol.</summary>
+        </member>
+        <member name="M:RabbitMQ.Client.Framing.Impl.Connection.Close(RabbitMQ.Client.ShutdownEventArgs,System.Boolean,System.Int32)">
+            <summary>Try to close connection in a graceful way</summary>
+            <remarks>
+            <para>
+            Shutdown reason contains code and text assigned when closing the connection,
+            as well as the information about what initiated the close
+            </para>
+            <para>
+            Abort flag, if true, signals to close the ongoing connection immediately
+            and do not report any errors if it was already closed.
+            </para>
+            <para>
+            Timeout determines how much time internal close operations should be given
+            to complete. Negative or Timeout.Infinite value mean infinity.
+            </para>
+            </remarks>
+        </member>
+        <member name="M:RabbitMQ.Client.Framing.Impl.Connection.ClosingLoop">
+            <remarks>
+             Loop only used while quiescing. Use only to cleanly close connection
+            </remarks>
+        </member>
+        <member name="M:RabbitMQ.Client.Framing.Impl.Connection.HandleDomainUnload(System.Object,System.EventArgs)">
+            <remarks>
+            We need to close the socket, otherwise attempting to unload the domain
+            could cause a CannotUnloadAppDomainException
+            </remarks>
+        </member>
+        <member name="M:RabbitMQ.Client.Framing.Impl.Connection.OnShutdown">
+            <summary>Broadcasts notification of the final shutdown of the connection.</summary>
+        </member>
+        <member name="M:RabbitMQ.Client.Framing.Impl.Connection.QuiesceChannel(RabbitMQ.Client.Impl.SoftProtocolException)">
+            <summary>
+             Sets the channel named in the SoftProtocolException into
+             "quiescing mode", where we issue a channel.close and
+             ignore everything except for subsequent channel.close
+             messages and the channel.close-ok reply that should
+             eventually arrive.
+            </summary>
+            <remarks>
+            <para>
+             Since a well-behaved peer will not wait indefinitely before
+             issuing the close-ok, we don't bother with a timeout here;
+             compare this to the case of a connection.close-ok, where a
+             timeout is necessary.
+            </para>
+            <para>
+             We need to send the close method and politely wait for a
+             reply before marking the channel as available for reuse.
+            </para>
+            <para>
+             As soon as SoftProtocolException is detected, we should stop
+             servicing ordinary application work, and should concentrate
+             on bringing down the channel as quickly and gracefully as
+             possible. The way this is done, as per the close-protocol,
+             is to signal closure up the stack *before* sending the
+             channel.close, by invoking ISession.Close. Once the upper
+             layers have been signalled, we are free to do what we need
+             to do to clean up and shut down the channel.
+            </para>
+            </remarks>
+        </member>
+        <member name="M:RabbitMQ.Client.Framing.Impl.Connection.TerminateMainloop">
+            <remarks>
+             May be called more than once. Should therefore be idempotent.
+            </remarks>
+        </member>
+        <member name="M:RabbitMQ.Client.Framing.Impl.Connection.Abort">
+            <summary>API-side invocation of connection abort.</summary>
+        </member>
+        <member name="M:RabbitMQ.Client.Framing.Impl.Connection.Abort(System.UInt16,System.String)">
+            <summary>API-side invocation of connection abort.</summary>
+        </member>
+        <member name="M:RabbitMQ.Client.Framing.Impl.Connection.Abort(System.Int32)">
+            <summary>API-side invocation of connection abort with timeout.</summary>
+        </member>
+        <member name="M:RabbitMQ.Client.Framing.Impl.Connection.Abort(System.UInt16,System.String,System.Int32)">
+            <summary>API-side invocation of connection abort with timeout.</summary>
+        </member>
+        <member name="M:RabbitMQ.Client.Framing.Impl.Connection.Close">
+            <summary>API-side invocation of connection.close.</summary>
+        </member>
+        <member name="M:RabbitMQ.Client.Framing.Impl.Connection.Close(System.UInt16,System.String)">
+            <summary>API-side invocation of connection.close.</summary>
+        </member>
+        <member name="M:RabbitMQ.Client.Framing.Impl.Connection.Close(System.Int32)">
+            <summary>API-side invocation of connection.close with timeout.</summary>
+        </member>
+        <member name="M:RabbitMQ.Client.Framing.Impl.Connection.Close(System.UInt16,System.String,System.Int32)">
+            <summary>API-side invocation of connection.close with timeout.</summary>
+        </member>
+        <member name="T:RabbitMQ.Client.Framing.Impl.ConnectionStart">
+            <summary>Autogenerated type. Private implementation class - do not use directly.</summary>
+        </member>
+        <member name="T:RabbitMQ.Client.Framing.Impl.ConnectionStartOk">
+            <summary>Autogenerated type. Private implementation class - do not use directly.</summary>
+        </member>
+        <member name="T:RabbitMQ.Client.Framing.Impl.ConnectionSecure">
+            <summary>Autogenerated type. Private implementation class - do not use directly.</summary>
+        </member>
+        <member name="T:RabbitMQ.Client.Framing.Impl.ConnectionSecureOk">
+            <summary>Autogenerated type. Private implementation class - do not use directly.</summary>
+        </member>
+        <member name="T:RabbitMQ.Client.Framing.Impl.ConnectionTune">
+            <summary>Autogenerated type. Private implementation class - do not use directly.</summary>
+        </member>
+        <member name="T:RabbitMQ.Client.Framing.Impl.ConnectionTuneOk">
+            <summary>Autogenerated type. Private implementation class - do not use directly.</summary>
+        </member>
+        <member name="T:RabbitMQ.Client.Framing.Impl.ConnectionOpen">
+            <summary>Autogenerated type. Private implementation class - do not use directly.</summary>
+        </member>
+        <member name="T:RabbitMQ.Client.Framing.Impl.ConnectionOpenOk">
+            <summary>Autogenerated type. Private implementation class - do not use directly.</summary>
+        </member>
+        <member name="T:RabbitMQ.Client.Framing.Impl.ConnectionClose">
+            <summary>Autogenerated type. Private implementation class - do not use directly.</summary>
+        </member>
+        <member name="T:RabbitMQ.Client.Framing.Impl.ConnectionCloseOk">
+            <summary>Autogenerated type. Private implementation class - do not use directly.</summary>
+        </member>
+        <member name="T:RabbitMQ.Client.Framing.Impl.ConnectionBlocked">
+            <summary>Autogenerated type. Private implementation class - do not use directly.</summary>
+        </member>
+        <member name="T:RabbitMQ.Client.Framing.Impl.ConnectionUnblocked">
+            <summary>Autogenerated type. Private implementation class - do not use directly.</summary>
+        </member>
+        <member name="T:RabbitMQ.Client.Framing.Impl.ChannelOpen">
+            <summary>Autogenerated type. Private implementation class - do not use directly.</summary>
+        </member>
+        <member name="T:RabbitMQ.Client.Framing.Impl.ChannelOpenOk">
+            <summary>Autogenerated type. Private implementation class - do not use directly.</summary>
+        </member>
+        <member name="T:RabbitMQ.Client.Framing.Impl.ChannelFlow">
+            <summary>Autogenerated type. Private implementation class - do not use directly.</summary>
+        </member>
+        <member name="T:RabbitMQ.Client.Framing.Impl.ChannelFlowOk">
+            <summary>Autogenerated type. Private implementation class - do not use directly.</summary>
+        </member>
+        <member name="T:RabbitMQ.Client.Framing.Impl.ChannelClose">
+            <summary>Autogenerated type. Private implementation class - do not use directly.</summary>
+        </member>
+        <member name="T:RabbitMQ.Client.Framing.Impl.ChannelCloseOk">
+            <summary>Autogenerated type. Private implementation class - do not use directly.</summary>
+        </member>
+        <member name="T:RabbitMQ.Client.Framing.Impl.ExchangeDeclare">
+            <summary>Autogenerated type. Private implementation class - do not use directly.</summary>
+        </member>
+        <member name="T:RabbitMQ.Client.Framing.Impl.ExchangeDeclareOk">
+            <summary>Autogenerated type. Private implementation class - do not use directly.</summary>
+        </member>
+        <member name="T:RabbitMQ.Client.Framing.Impl.ExchangeDelete">
+            <summary>Autogenerated type. Private implementation class - do not use directly.</summary>
+        </member>
+        <member name="T:RabbitMQ.Client.Framing.Impl.ExchangeDeleteOk">
+            <summary>Autogenerated type. Private implementation class - do not use directly.</summary>
+        </member>
+        <member name="T:RabbitMQ.Client.Framing.Impl.ExchangeBind">
+            <summary>Autogenerated type. Private implementation class - do not use directly.</summary>
+        </member>
+        <member name="T:RabbitMQ.Client.Framing.Impl.ExchangeBindOk">
+            <summary>Autogenerated type. Private implementation class - do not use directly.</summary>
+        </member>
+        <member name="T:RabbitMQ.Client.Framing.Impl.ExchangeUnbind">
+            <summary>Autogenerated type. Private implementation class - do not use directly.</summary>
+        </member>
+        <member name="T:RabbitMQ.Client.Framing.Impl.ExchangeUnbindOk">
+            <summary>Autogenerated type. Private implementation class - do not use directly.</summary>
+        </member>
+        <member name="T:RabbitMQ.Client.Framing.Impl.QueueDeclare">
+            <summary>Autogenerated type. Private implementation class - do not use directly.</summary>
+        </member>
+        <member name="T:RabbitMQ.Client.Framing.Impl.QueueDeclareOk">
+            <summary>Autogenerated type. Private implementation class - do not use directly.</summary>
+        </member>
+        <member name="T:RabbitMQ.Client.Framing.Impl.QueueBind">
+            <summary>Autogenerated type. Private implementation class - do not use directly.</summary>
+        </member>
+        <member name="T:RabbitMQ.Client.Framing.Impl.QueueBindOk">
+            <summary>Autogenerated type. Private implementation class - do not use directly.</summary>
+        </member>
+        <member name="T:RabbitMQ.Client.Framing.Impl.QueueUnbind">
+            <summary>Autogenerated type. Private implementation class - do not use directly.</summary>
+        </member>
+        <member name="T:RabbitMQ.Client.Framing.Impl.QueueUnbindOk">
+            <summary>Autogenerated type. Private implementation class - do not use directly.</summary>
+        </member>
+        <member name="T:RabbitMQ.Client.Framing.Impl.QueuePurge">
+            <summary>Autogenerated type. Private implementation class - do not use directly.</summary>
+        </member>
+        <member name="T:RabbitMQ.Client.Framing.Impl.QueuePurgeOk">
+            <summary>Autogenerated type. Private implementation class - do not use directly.</summary>
+        </member>
+        <member name="T:RabbitMQ.Client.Framing.Impl.QueueDelete">
+            <summary>Autogenerated type. Private implementation class - do not use directly.</summary>
+        </member>
+        <member name="T:RabbitMQ.Client.Framing.Impl.QueueDeleteOk">
+            <summary>Autogenerated type. Private implementation class - do not use directly.</summary>
+        </member>
+        <member name="T:RabbitMQ.Client.Framing.Impl.BasicQos">
+            <summary>Autogenerated type. Private implementation class - do not use directly.</summary>
+        </member>
+        <member name="T:RabbitMQ.Client.Framing.Impl.BasicQosOk">
+            <summary>Autogenerated type. Private implementation class - do not use directly.</summary>
+        </member>
+        <member name="T:RabbitMQ.Client.Framing.Impl.BasicConsume">
+            <summary>Autogenerated type. Private implementation class - do not use directly.</summary>
+        </member>
+        <member name="T:RabbitMQ.Client.Framing.Impl.BasicConsumeOk">
+            <summary>Autogenerated type. Private implementation class - do not use directly.</summary>
+        </member>
+        <member name="T:RabbitMQ.Client.Framing.Impl.BasicCancel">
+            <summary>Autogenerated type. Private implementation class - do not use directly.</summary>
+        </member>
+        <member name="T:RabbitMQ.Client.Framing.Impl.BasicCancelOk">
+            <summary>Autogenerated type. Private implementation class - do not use directly.</summary>
+        </member>
+        <member name="T:RabbitMQ.Client.Framing.Impl.BasicPublish">
+            <summary>Autogenerated type. Private implementation class - do not use directly.</summary>
+        </member>
+        <member name="T:RabbitMQ.Client.Framing.Impl.BasicReturn">
+            <summary>Autogenerated type. Private implementation class - do not use directly.</summary>
+        </member>
+        <member name="T:RabbitMQ.Client.Framing.Impl.BasicDeliver">
+            <summary>Autogenerated type. Private implementation class - do not use directly.</summary>
+        </member>
+        <member name="T:RabbitMQ.Client.Framing.Impl.BasicGet">
+            <summary>Autogenerated type. Private implementation class - do not use directly.</summary>
+        </member>
+        <member name="T:RabbitMQ.Client.Framing.Impl.BasicGetOk">
+            <summary>Autogenerated type. Private implementation class - do not use directly.</summary>
+        </member>
+        <member name="T:RabbitMQ.Client.Framing.Impl.BasicGetEmpty">
+            <summary>Autogenerated type. Private implementation class - do not use directly.</summary>
+        </member>
+        <member name="T:RabbitMQ.Client.Framing.Impl.BasicAck">
+            <summary>Autogenerated type. Private implementation class - do not use directly.</summary>
+        </member>
+        <member name="T:RabbitMQ.Client.Framing.Impl.BasicReject">
+            <summary>Autogenerated type. Private implementation class - do not use directly.</summary>
+        </member>
+        <member name="T:RabbitMQ.Client.Framing.Impl.BasicRecoverAsync">
+            <summary>Autogenerated type. Private implementation class - do not use directly.</summary>
+        </member>
+        <member name="T:RabbitMQ.Client.Framing.Impl.BasicRecover">
+            <summary>Autogenerated type. Private implementation class - do not use directly.</summary>
+        </member>
+        <member name="T:RabbitMQ.Client.Framing.Impl.BasicRecoverOk">
+            <summary>Autogenerated type. Private implementation class - do not use directly.</summary>
+        </member>
+        <member name="T:RabbitMQ.Client.Framing.Impl.BasicNack">
+            <summary>Autogenerated type. Private implementation class - do not use directly.</summary>
+        </member>
+        <member name="T:RabbitMQ.Client.Framing.Impl.TxSelect">
+            <summary>Autogenerated type. Private implementation class - do not use directly.</summary>
+        </member>
+        <member name="T:RabbitMQ.Client.Framing.Impl.TxSelectOk">
+            <summary>Autogenerated type. Private implementation class - do not use directly.</summary>
+        </member>
+        <member name="T:RabbitMQ.Client.Framing.Impl.TxCommit">
+            <summary>Autogenerated type. Private implementation class - do not use directly.</summary>
+        </member>
+        <member name="T:RabbitMQ.Client.Framing.Impl.TxCommitOk">
+            <summary>Autogenerated type. Private implementation class - do not use directly.</summary>
+        </member>
+        <member name="T:RabbitMQ.Client.Framing.Impl.TxRollback">
+            <summary>Autogenerated type. Private implementation class - do not use directly.</summary>
+        </member>
+        <member name="T:RabbitMQ.Client.Framing.Impl.TxRollbackOk">
+            <summary>Autogenerated type. Private implementation class - do not use directly.</summary>
+        </member>
+        <member name="T:RabbitMQ.Client.Framing.Impl.ConfirmSelect">
+            <summary>Autogenerated type. Private implementation class - do not use directly.</summary>
+        </member>
+        <member name="T:RabbitMQ.Client.Framing.Impl.ConfirmSelectOk">
+            <summary>Autogenerated type. Private implementation class - do not use directly.</summary>
+        </member>
+        <member name="P:RabbitMQ.Client.Framing.Protocol.MajorVersion">
+            <summary>Protocol major version (= 0)</summary>
+        </member>
+        <member name="P:RabbitMQ.Client.Framing.Protocol.MinorVersion">
+            <summary>Protocol minor version (= 9)</summary>
+        </member>
+        <member name="P:RabbitMQ.Client.Framing.Protocol.Revision">
+            <summary>Protocol revision (= 1)</summary>
+        </member>
+        <member name="P:RabbitMQ.Client.Framing.Protocol.ApiName">
+            <summary>Protocol API name (= :AMQP_0_9_1)</summary>
+        </member>
+        <member name="P:RabbitMQ.Client.Framing.Protocol.DefaultPort">
+            <summary>Default TCP port (= 5672)</summary>
+        </member>
+        <member name="F:RabbitMQ.Client.Framing.Constants.FrameMethod">
+            <summary>(= 1)</summary>
+        </member>
+        <member name="F:RabbitMQ.Client.Framing.Constants.FrameHeader">
+            <summary>(= 2)</summary>
+        </member>
+        <member name="F:RabbitMQ.Client.Framing.Constants.FrameBody">
+            <summary>(= 3)</summary>
+        </member>
+        <member name="F:RabbitMQ.Client.Framing.Constants.FrameHeartbeat">
+            <summary>(= 8)</summary>
+        </member>
+        <member name="F:RabbitMQ.Client.Framing.Constants.FrameMinSize">
+            <summary>(= 4096)</summary>
+        </member>
+        <member name="F:RabbitMQ.Client.Framing.Constants.FrameEnd">
+            <summary>(= 206)</summary>
+        </member>
+        <member name="F:RabbitMQ.Client.Framing.Constants.ReplySuccess">
+            <summary>(= 200)</summary>
+        </member>
+        <member name="F:RabbitMQ.Client.Framing.Constants.ContentTooLarge">
+            <summary>(= 311)</summary>
+        </member>
+        <member name="F:RabbitMQ.Client.Framing.Constants.NoConsumers">
+            <summary>(= 313)</summary>
+        </member>
+        <member name="F:RabbitMQ.Client.Framing.Constants.ConnectionForced">
+            <summary>(= 320)</summary>
+        </member>
+        <member name="F:RabbitMQ.Client.Framing.Constants.InvalidPath">
+            <summary>(= 402)</summary>
+        </member>
+        <member name="F:RabbitMQ.Client.Framing.Constants.AccessRefused">
+            <summary>(= 403)</summary>
+        </member>
+        <member name="F:RabbitMQ.Client.Framing.Constants.NotFound">
+            <summary>(= 404)</summary>
+        </member>
+        <member name="F:RabbitMQ.Client.Framing.Constants.ResourceLocked">
+            <summary>(= 405)</summary>
+        </member>
+        <member name="F:RabbitMQ.Client.Framing.Constants.PreconditionFailed">
+            <summary>(= 406)</summary>
+        </member>
+        <member name="F:RabbitMQ.Client.Framing.Constants.FrameError">
+            <summary>(= 501)</summary>
+        </member>
+        <member name="F:RabbitMQ.Client.Framing.Constants.SyntaxError">
+            <summary>(= 502)</summary>
+        </member>
+        <member name="F:RabbitMQ.Client.Framing.Constants.CommandInvalid">
+            <summary>(= 503)</summary>
+        </member>
+        <member name="F:RabbitMQ.Client.Framing.Constants.ChannelError">
+            <summary>(= 504)</summary>
+        </member>
+        <member name="F:RabbitMQ.Client.Framing.Constants.UnexpectedFrame">
+            <summary>(= 505)</summary>
+        </member>
+        <member name="F:RabbitMQ.Client.Framing.Constants.ResourceError">
+            <summary>(= 506)</summary>
+        </member>
+        <member name="F:RabbitMQ.Client.Framing.Constants.NotAllowed">
+            <summary>(= 530)</summary>
+        </member>
+        <member name="F:RabbitMQ.Client.Framing.Constants.NotImplemented">
+            <summary>(= 540)</summary>
+        </member>
+        <member name="F:RabbitMQ.Client.Framing.Constants.InternalError">
+            <summary>(= 541)</summary>
+        </member>
+        <member name="T:RabbitMQ.Client.Framing.IConnectionStart">
+            <summary>Autogenerated type. AMQP specification method "connection.start".</summary>
+        </member>
+        <member name="T:RabbitMQ.Client.Framing.IConnectionStartOk">
+            <summary>Autogenerated type. AMQP specification method "connection.start-ok".</summary>
+        </member>
+        <member name="T:RabbitMQ.Client.Framing.IConnectionSecure">
+            <summary>Autogenerated type. AMQP specification method "connection.secure".</summary>
+        </member>
+        <member name="T:RabbitMQ.Client.Framing.IConnectionSecureOk">
+            <summary>Autogenerated type. AMQP specification method "connection.secure-ok".</summary>
+        </member>
+        <member name="T:RabbitMQ.Client.Framing.IConnectionTune">
+            <summary>Autogenerated type. AMQP specification method "connection.tune".</summary>
+        </member>
+        <member name="T:RabbitMQ.Client.Framing.IConnectionTuneOk">
+            <summary>Autogenerated type. AMQP specification method "connection.tune-ok".</summary>
+        </member>
+        <member name="T:RabbitMQ.Client.Framing.IConnectionOpen">
+            <summary>Autogenerated type. AMQP specification method "connection.open".</summary>
+        </member>
+        <member name="T:RabbitMQ.Client.Framing.IConnectionOpenOk">
+            <summary>Autogenerated type. AMQP specification method "connection.open-ok".</summary>
+        </member>
+        <member name="T:RabbitMQ.Client.Framing.IConnectionClose">
+            <summary>Autogenerated type. AMQP specification method "connection.close".</summary>
+        </member>
+        <member name="T:RabbitMQ.Client.Framing.IConnectionCloseOk">
+            <summary>Autogenerated type. AMQP specification method "connection.close-ok".</summary>
+        </member>
+        <member name="T:RabbitMQ.Client.Framing.IConnectionBlocked">
+            <summary>Autogenerated type. AMQP specification method "connection.blocked".</summary>
+        </member>
+        <member name="T:RabbitMQ.Client.Framing.IConnectionUnblocked">
+            <summary>Autogenerated type. AMQP specification method "connection.unblocked".</summary>
+        </member>
+        <member name="T:RabbitMQ.Client.Framing.IChannelOpen">
+            <summary>Autogenerated type. AMQP specification method "channel.open".</summary>
+        </member>
+        <member name="T:RabbitMQ.Client.Framing.IChannelOpenOk">
+            <summary>Autogenerated type. AMQP specification method "channel.open-ok".</summary>
+        </member>
+        <member name="T:RabbitMQ.Client.Framing.IChannelFlow">
+            <summary>Autogenerated type. AMQP specification method "channel.flow".</summary>
+        </member>
+        <member name="T:RabbitMQ.Client.Framing.IChannelFlowOk">
+            <summary>Autogenerated type. AMQP specification method "channel.flow-ok".</summary>
+        </member>
+        <member name="T:RabbitMQ.Client.Framing.IChannelClose">
+            <summary>Autogenerated type. AMQP specification method "channel.close".</summary>
+        </member>
+        <member name="T:RabbitMQ.Client.Framing.IChannelCloseOk">
+            <summary>Autogenerated type. AMQP specification method "channel.close-ok".</summary>
+        </member>
+        <member name="T:RabbitMQ.Client.Framing.IExchangeDeclare">
+            <summary>Autogenerated type. AMQP specification method "exchange.declare".</summary>
+        </member>
+        <member name="T:RabbitMQ.Client.Framing.IExchangeDeclareOk">
+            <summary>Autogenerated type. AMQP specification method "exchange.declare-ok".</summary>
+        </member>
+        <member name="T:RabbitMQ.Client.Framing.IExchangeDelete">
+            <summary>Autogenerated type. AMQP specification method "exchange.delete".</summary>
+        </member>
+        <member name="T:RabbitMQ.Client.Framing.IExchangeDeleteOk">
+            <summary>Autogenerated type. AMQP specification method "exchange.delete-ok".</summary>
+        </member>
+        <member name="T:RabbitMQ.Client.Framing.IExchangeBind">
+            <summary>Autogenerated type. AMQP specification method "exchange.bind".</summary>
+        </member>
+        <member name="T:RabbitMQ.Client.Framing.IExchangeBindOk">
+            <summary>Autogenerated type. AMQP specification method "exchange.bind-ok".</summary>
+        </member>
+        <member name="T:RabbitMQ.Client.Framing.IExchangeUnbind">
+            <summary>Autogenerated type. AMQP specification method "exchange.unbind".</summary>
+        </member>
+        <member name="T:RabbitMQ.Client.Framing.IExchangeUnbindOk">
+            <summary>Autogenerated type. AMQP specification method "exchange.unbind-ok".</summary>
+        </member>
+        <member name="T:RabbitMQ.Client.Framing.IQueueDeclare">
+            <summary>Autogenerated type. AMQP specification method "queue.declare".</summary>
+        </member>
+        <member name="T:RabbitMQ.Client.Framing.IQueueDeclareOk">
+            <summary>Autogenerated type. AMQP specification method "queue.declare-ok".</summary>
+        </member>
+        <member name="T:RabbitMQ.Client.Framing.IQueueBind">
+            <summary>Autogenerated type. AMQP specification method "queue.bind".</summary>
+        </member>
+        <member name="T:RabbitMQ.Client.Framing.IQueueBindOk">
+            <summary>Autogenerated type. AMQP specification method "queue.bind-ok".</summary>
+        </member>
+        <member name="T:RabbitMQ.Client.Framing.IQueueUnbind">
+            <summary>Autogenerated type. AMQP specification method "queue.unbind".</summary>
+        </member>
+        <member name="T:RabbitMQ.Client.Framing.IQueueUnbindOk">
+            <summary>Autogenerated type. AMQP specification method "queue.unbind-ok".</summary>
+        </member>
+        <member name="T:RabbitMQ.Client.Framing.IQueuePurge">
+            <summary>Autogenerated type. AMQP specification method "queue.purge".</summary>
+        </member>
+        <member name="T:RabbitMQ.Client.Framing.IQueuePurgeOk">
+            <summary>Autogenerated type. AMQP specification method "queue.purge-ok".</summary>
+        </member>
+        <member name="T:RabbitMQ.Client.Framing.IQueueDelete">
+            <summary>Autogenerated type. AMQP specification method "queue.delete".</summary>
+        </member>
+        <member name="T:RabbitMQ.Client.Framing.IQueueDeleteOk">
+            <summary>Autogenerated type. AMQP specification method "queue.delete-ok".</summary>
+        </member>
+        <member name="T:RabbitMQ.Client.Framing.IBasicQos">
+            <summary>Autogenerated type. AMQP specification method "basic.qos".</summary>
+        </member>
+        <member name="T:RabbitMQ.Client.Framing.IBasicQosOk">
+            <summary>Autogenerated type. AMQP specification method "basic.qos-ok".</summary>
+        </member>
+        <member name="T:RabbitMQ.Client.Framing.IBasicConsume">
+            <summary>Autogenerated type. AMQP specification method "basic.consume".</summary>
+        </member>
+        <member name="T:RabbitMQ.Client.Framing.IBasicConsumeOk">
+            <summary>Autogenerated type. AMQP specification method "basic.consume-ok".</summary>
+        </member>
+        <member name="T:RabbitMQ.Client.Framing.IBasicCancel">
+            <summary>Autogenerated type. AMQP specification method "basic.cancel".</summary>
+        </member>
+        <member name="T:RabbitMQ.Client.Framing.IBasicCancelOk">
+            <summary>Autogenerated type. AMQP specification method "basic.cancel-ok".</summary>
+        </member>
+        <member name="T:RabbitMQ.Client.Framing.IBasicPublish">
+            <summary>Autogenerated type. AMQP specification method "basic.publish".</summary>
+        </member>
+        <member name="T:RabbitMQ.Client.Framing.IBasicReturn">
+            <summary>Autogenerated type. AMQP specification method "basic.return".</summary>
+        </member>
+        <member name="T:RabbitMQ.Client.Framing.IBasicDeliver">
+            <summary>Autogenerated type. AMQP specification method "basic.deliver".</summary>
+        </member>
+        <member name="T:RabbitMQ.Client.Framing.IBasicGet">
+            <summary>Autogenerated type. AMQP specification method "basic.get".</summary>
+        </member>
+        <member name="T:RabbitMQ.Client.Framing.IBasicGetOk">
+            <summary>Autogenerated type. AMQP specification method "basic.get-ok".</summary>
+        </member>
+        <member name="T:RabbitMQ.Client.Framing.IBasicGetEmpty">
+            <summary>Autogenerated type. AMQP specification method "basic.get-empty".</summary>
+        </member>
+        <member name="T:RabbitMQ.Client.Framing.IBasicAck">
+            <summary>Autogenerated type. AMQP specification method "basic.ack".</summary>
+        </member>
+        <member name="T:RabbitMQ.Client.Framing.IBasicReject">
+            <summary>Autogenerated type. AMQP specification method "basic.reject".</summary>
+        </member>
+        <member name="T:RabbitMQ.Client.Framing.IBasicRecoverAsync">
+            <summary>Autogenerated type. AMQP specification method "basic.recover-async".</summary>
+        </member>
+        <member name="T:RabbitMQ.Client.Framing.IBasicRecover">
+            <summary>Autogenerated type. AMQP specification method "basic.recover".</summary>
+        </member>
+        <member name="T:RabbitMQ.Client.Framing.IBasicRecoverOk">
+            <summary>Autogenerated type. AMQP specification method "basic.recover-ok".</summary>
+        </member>
+        <member name="T:RabbitMQ.Client.Framing.IBasicNack">
+            <summary>Autogenerated type. AMQP specification method "basic.nack".</summary>
+        </member>
+        <member name="T:RabbitMQ.Client.Framing.ITxSelect">
+            <summary>Autogenerated type. AMQP specification method "tx.select".</summary>
+        </member>
+        <member name="T:RabbitMQ.Client.Framing.ITxSelectOk">
+            <summary>Autogenerated type. AMQP specification method "tx.select-ok".</summary>
+        </member>
+        <member name="T:RabbitMQ.Client.Framing.ITxCommit">
+            <summary>Autogenerated type. AMQP specification method "tx.commit".</summary>
+        </member>
+        <member name="T:RabbitMQ.Client.Framing.ITxCommitOk">
+            <summary>Autogenerated type. AMQP specification method "tx.commit-ok".</summary>
+        </member>
+        <member name="T:RabbitMQ.Client.Framing.ITxRollback">
+            <summary>Autogenerated type. AMQP specification method "tx.rollback".</summary>
+        </member>
+        <member name="T:RabbitMQ.Client.Framing.ITxRollbackOk">
+            <summary>Autogenerated type. AMQP specification method "tx.rollback-ok".</summary>
+        </member>
+        <member name="T:RabbitMQ.Client.Framing.IConfirmSelect">
+            <summary>Autogenerated type. AMQP specification method "confirm.select".</summary>
+        </member>
+        <member name="T:RabbitMQ.Client.Framing.IConfirmSelectOk">
+            <summary>Autogenerated type. AMQP specification method "confirm.select-ok".</summary>
+        </member>
+        <member name="T:RabbitMQ.Client.Framing.BasicProperties">
+            <summary>Autogenerated type. AMQP specification content header properties for content class "basic"</summary>
+        </member>
         <member name="T:RabbitMQ.Client.Apigen.Attributes.AmqpApigenAttribute">
             <summary>Base class for attributes for controlling the API
             autogeneration process.</summary>
@@ -6039,27 +6297,27 @@
              IEnumerator in, for example, a foreach loop.
             </para>
             <para>
-             Note that if the "noAck" option is enabled (which it is by
+             Note that if the "autoAck" option is enabled (which it is by
              default), then received deliveries are automatically acked
              within the server before they are even transmitted across the
              network to us. Calling Ack() on received events will always do
-             the right thing: if "noAck" is enabled, nothing is done on an
-             Ack() call, and if "noAck" is disabled, IModel.BasicAck() is
+             the right thing: if "autoAck" is enabled, nothing is done on an
+             Ack() call, and if "autoAck" is disabled, IModel.BasicAck() is
              called with the correct parameters.
             </para>
             </remarks>
         </member>
         <member name="M:RabbitMQ.Client.MessagePatterns.Subscription.#ctor(RabbitMQ.Client.IModel,System.String)">
-            <summary>Creates a new Subscription in "noAck" mode,
+            <summary>Creates a new Subscription in "autoAck" mode,
             consuming from a named queue.</summary>
         </member>
         <member name="M:RabbitMQ.Client.MessagePatterns.Subscription.#ctor(RabbitMQ.Client.IModel,System.String,System.Boolean)">
             <summary>Creates a new Subscription, with full control over
-            both "noAck" mode and the name of the queue.</summary>
+            both "autoAck" mode and the name of the queue.</summary>
         </member>
         <member name="M:RabbitMQ.Client.MessagePatterns.Subscription.#ctor(RabbitMQ.Client.IModel,System.String,System.Boolean,System.String)">
             <summary>Creates a new Subscription, with full control over
-            both "noAck" mode, the name of the queue, and the consumer tag.</summary>
+            both "autoAck" mode, the name of the queue, and the consumer tag.</summary>
         </member>
         <member name="P:RabbitMQ.Client.MessagePatterns.Subscription.Consumer">
             <summary>Retrieve the IBasicConsumer that is receiving the
@@ -6082,8 +6340,8 @@
         <member name="P:RabbitMQ.Client.MessagePatterns.Subscription.Model">
             <summary>Retrieve the IModel our subscription is carried by.</summary>
         </member>
-        <member name="P:RabbitMQ.Client.MessagePatterns.Subscription.NoAck">
-            <summary>Returns true if we are in "noAck" mode, where
+        <member name="P:RabbitMQ.Client.MessagePatterns.Subscription.AutoAck">
+            <summary>Returns true if we are in "autoAck" mode, where
             calls to Ack() will be no-ops, and where the server acks
             messages before they are delivered to us. Returns false if
             we are in a mode where calls to Ack() are required, and
@@ -6114,7 +6372,7 @@
             null.</summary>
         </member>
         <member name="M:RabbitMQ.Client.MessagePatterns.Subscription.Ack(RabbitMQ.Client.Events.BasicDeliverEventArgs)">
-            <summary>If we are not in "noAck" mode, calls
+            <summary>If we are not in "autoAck" mode, calls
             IModel.BasicAck with the delivery-tag from <paramref name="evt"/>;
             otherwise, sends nothing to the server. if <paramref name="evt"/> is the same as LatestEvent
             by pointer comparison, sets LatestEvent to null.
@@ -6139,7 +6397,7 @@
             null.</summary>
         </member>
         <member name="M:RabbitMQ.Client.MessagePatterns.Subscription.Nack(RabbitMQ.Client.Events.BasicDeliverEventArgs,System.Boolean,System.Boolean)">
-            <summary>If we are not in "noAck" mode, calls
+            <summary>If we are not in "autoAck" mode, calls
             IModel.BasicNack with the delivery-tag from <paramref name="evt"/>;
             otherwise, sends nothing to the server. if <paramref name="evt"/> is the same as LatestEvent
             by pointer comparison, sets LatestEvent to null.
@@ -6163,7 +6421,7 @@
              Updates LatestEvent to the value returned.
             </para>
             <para>
-             Does not acknowledge any deliveries at all (but in "noAck"
+             Does not acknowledge any deliveries at all (but in "autoAck"
              mode, the server will have auto-acknowledged each event
              before it is even sent across the wire to us).
             </para>
@@ -6201,7 +6459,7 @@
             </para>
             <para>
              This method does not acknowledge any deliveries at all
-             (but in "noAck" mode, the server will have
+             (but in "autoAck" mode, the server will have
              auto-acknowledged each event before it is even sent across
              the wire to us).
             </para>
