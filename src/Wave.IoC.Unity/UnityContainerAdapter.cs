@@ -28,8 +28,7 @@ using System.Threading.Tasks;
 namespace Wave.IoC.Unity
 {
     /// <summary>
-    /// Integrates Unity into Wave
-    /// 
+    /// Integrates Unity into Wave.
     /// Concrete types have singleton lifecycles
     /// </summary>
     public class UnityContainerAdapter : IContainer
