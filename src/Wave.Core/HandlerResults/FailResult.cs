@@ -26,7 +26,7 @@ namespace Wave.HandlerResults
 
         public void ProcessResult(RawMessage message, ITransport transport, ILogger log)
         {
-            log.ErrorFormat("Message {0} moved to error queue", message.ToString());
+            log.WarnFormat("Message {0} moved to error queue", message.ToString());
 
             // If retry count is not reset to 0, replaying this message will immediatly fail it again
             // Store the original retry count in a header for diagnostic purposes
