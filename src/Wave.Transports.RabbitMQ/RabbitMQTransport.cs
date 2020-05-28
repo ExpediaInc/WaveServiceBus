@@ -16,17 +16,23 @@
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Configuration;
+using System.Linq;
 using System.Threading;
 using Wave.Transports.RabbitMQ.Extensions;
 using Wave.Utility;
 
 namespace Wave.Transports.RabbitMQ
 {    
-    public class RabbitMQTransport : ITransport
+    public class RabbitMQTransport : ITransport, IDisposable
     {
+        private static readonly TimeSpan SendChannelMonitorInterval = TimeSpan.FromMinutes(5.0);
+
         private static readonly Action<IBasicProperties, IDictionary<string, string>> DoNothingOnSend = (properties, metadata) => { };
+
+        private readonly ConcurrentDictionary<Thread, IModel> sendChannelsByThread = new ConcurrentDictionary<Thread, IModel>();
 
         private readonly RabbitConnectionManager connectionManager;        
         private readonly String delayQueueName;
@@ -39,7 +45,9 @@ namespace Wave.Transports.RabbitMQ
         private readonly ThreadLocal<IModel> sendChannel;
 
         private readonly Action<IBasicProperties, IDictionary<string, string>> onSend;
- 
+
+        private readonly Timer sendChannelMonitor;
+
         public RabbitMQTransport(IConfigurationContext configuration)
             : this(configuration.QueueNameResolver.GetPrimaryQueueName(), configuration)
         {            
@@ -59,9 +67,15 @@ namespace Wave.Transports.RabbitMQ
 
             this.DeclareExchange();
 
-            this.sendChannel = new ThreadLocal<IModel>(() => this.connectionManager.GetChannel(), true);
+            this.sendChannel = new ThreadLocal<IModel>(valueFactory: CreateSendChannel);
 
             this.onSend = this.configuration.GetOnSendingMessageAction() ?? DoNothingOnSend;
+
+            this.sendChannelMonitor = new Timer(
+                MonitorSendChannels,
+                state: null,
+                dueTime: SendChannelMonitorInterval,
+                period: SendChannelMonitorInterval);
         }
 
         public void GetDelayMessages(CancellationToken token, Action<RawMessage, Action, Action> onMessageReceived)
@@ -133,7 +147,8 @@ namespace Wave.Transports.RabbitMQ
             if (this.sendChannel.Value.IsClosed)
             {
                 this.sendChannel.Value.Dispose();
-                this.sendChannel.Value = this.connectionManager.GetChannel();
+                DestroySendChannel(Thread.CurrentThread);
+                this.sendChannel.Value = CreateSendChannel();
             }
 
             this.sendChannel.Value.BasicPublish(
@@ -160,33 +175,34 @@ namespace Wave.Transports.RabbitMQ
 
         public void Shutdown()
         {
-            // Dispose all of the channels
-            IList<IModel> channels = new List<IModel>();
-            try
-            {
-                channels = this.sendChannel.Values;
-            }
-            catch (ObjectDisposedException)
-            {
-                // accessing sendChannel.Values can throw ObjectDisposedException; proceed with shutdown sequence
-            }
-
-            foreach (var channel in channels)
-            {
-                channel.Dispose();
-            }
-
-            // Dispose the thread local wrapper
-            this.sendChannel.Dispose();
+            Dispose();
 
             // Force the RabbitMQ connection to shutdown.
             this.connectionManager.Shutdown();
+        }
+
+        public void Dispose()
+        {
+            this.sendChannel.Dispose();
+
+            foreach (Thread thread in AllSendChannelThreads)
+            {
+                DestroySendChannel(thread);
+            }
+
+            this.sendChannelMonitor.Dispose();
         }
 
         internal Version ServerVersion
         {
             get { return this.connectionManager.ServerVersion; }
         }
+
+        private IEnumerable<Thread> AllSendChannelThreads
+            => this.sendChannelsByThread.Keys;
+
+        private IEnumerable<Thread> DeadSendChannelThreads
+            => AllSendChannelThreads.Where(thread => !thread.IsAlive);
 
         private void DeclareExchange()
         {
@@ -270,7 +286,42 @@ namespace Wave.Transports.RabbitMQ
                 }
             }
         }
-           
+
+        private IModel CreateSendChannel()
+        {
+            return this.sendChannelsByThread.GetOrAdd(
+                key: Thread.CurrentThread,
+                valueFactory: thread => this.connectionManager.GetChannel());
+        }
+
+        private void MonitorSendChannels(object state)
+        {
+            foreach (Thread thread in DeadSendChannelThreads)
+            {
+                DestroySendChannel(thread);
+            }
+        }
+
+        private void DestroySendChannel(Thread thread)
+        {
+            if (this.sendChannelsByThread.TryRemove(thread, out IModel channel))
+            {
+                DestroySendChannel(channel);
+            }
+        }
+
+        private static void DestroySendChannel(IModel channel)
+        {
+            try
+            {
+                channel.Dispose();
+            }
+            catch (ObjectDisposedException)
+            {
+                // continue if already disposed
+            }
+        }
+
         private IConfigurationContext MergeConfiguration(IConfigurationContext context)
         {
             var defaultSettings = new Configuration.ConfigurationSettings();
