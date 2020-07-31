@@ -1,6 +1,12 @@
 # Vagrant Folder
 .vagrant/
 
+# Mac files
+*.DS_Store
+
+#Rider
+.idea/
+
 # Build Folders (you can keep bin if you'd like, to store dlls and pdbs)
 [Bb]in/
 [Oo]bj/
