@@ -12,18 +12,10 @@
 *  See the License for the specific language governing permissions and
 *  limitations under the License.
 */
+using System;
 
-#if NET451 || NET472
-using Microsoft.Practices.Unity;
-#else
 using Unity;
 using Unity.Lifetime;
-#endif
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Wave.IoC.Unity
 {
@@ -36,8 +28,8 @@ namespace Wave.IoC.Unity
         private readonly IUnityContainer container;
 
         public UnityContainerAdapter(IUnityContainer container)
-        {            
-            this.container = container;        
+        {
+            this.container = container;
         }
 
         public T Resolve<T>()
@@ -46,11 +38,11 @@ namespace Wave.IoC.Unity
         }
 
         public object Resolve(Type type)
-        {                        
+        {
             return this.container.Resolve(type);
         }
 
-        public void Register<TFrom, TTo>(InstanceScope scope) 
+        public void Register<TFrom, TTo>(InstanceScope scope)
             where TTo : TFrom
         {
             this.Register(typeof(TFrom), typeof(TTo), scope);

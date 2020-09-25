@@ -1,4 +1,4 @@
-﻿/* Copyright 2014 Jonathan Holland.
+/* Copyright 2014 Jonathan Holland.
 *
 *  Licensed under the Apache License, Version 2.0 (the "License");
 *  you may not use this file except in compliance with the License.
@@ -79,9 +79,6 @@ namespace Wave.Configuration
             // RegisterTypeOrDefault below can grab the configured type for each
             // component
             this.Populate(fluentConfig.BuildUpConfiguration(this));
-#if NET451 || NET472
-            this.Populate(new XMLConfigurationSource().BuildUpConfiguration(this));
-#endif
 
             // Register Concrete types that will be used
             this.Container.Register<PrimaryConsumer, PrimaryConsumer>(InstanceScope.Singleton);
@@ -96,7 +93,7 @@ namespace Wave.Configuration
             this.RegisterTypeOrDefault<ISerializer, DefaultSerializer>();
             this.RegisterTypeOrDefault<IBusHost, DefaultHost>();
             this.RegisterTypeOrDefault<ITransport, DefaultTransport>();
-           
+
             // With TypeMap built, we can resolve the global instances for these now.
             this.ConfigurationContext.AssemblyLocator = this.Container.Resolve<IAssemblyLocator>();
             this.ConfigurationContext.SubscriptionKeyResolver = this.Container.Resolve<ISubscriptionKeyResolver>();
@@ -104,20 +101,20 @@ namespace Wave.Configuration
             this.ConfigurationContext.Logger = this.Container.Resolve<ILogger>();
             this.ConfigurationContext.Serializer = this.Container.Resolve<ISerializer>();
             this.ConfigurationContext.Transport = this.Container.Resolve<ITransport>();
-            
+
             // Final config pass is to build up subscriptions and filters via reflection
             this.Populate(new ReflectionConfigurationSource().BuildUpConfiguration(this));
 
             // Set subscriptions and filters into the context
             this.ConfigurationContext.Subscriptions = this.Subscriptions.ToLookup(k => k.Key, v => v.Value);
-            
+
             this.ConfigurationContext.InboundMessageFilters = this.InboundMessageFilters
                     .SelectMany(p => p.Value.Distinct().Select(x => new { p.Key, Value = x }))
                     .ToLookup(pair => pair.Key, pair => pair.Value);
 
             this.ConfigurationContext.OutboundMessageFilters = this.OutboundMessageFilters
                   .SelectMany(p => p.Value.Distinct().Select(x => new { p.Key, Value = x }))
-                  .ToLookup(pair => pair.Key, pair => pair.Value);            
+                  .ToLookup(pair => pair.Key, pair => pair.Value);
         }
     }
 }
